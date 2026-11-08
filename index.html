@@ -124,6 +124,11 @@
       <section class="screen viewer-screen" data-screen="viewer" aria-labelledby="viewer-title" hidden>
         <div class="viewer-stage" data-viewer-stage>
           <div class="artwork-stack">
+            <div class="artwork-frame" data-artwork-frame>
+              <img data-main-artwork alt="" draggable="false">
+              <img class="artwork-ghost" data-artwork-ghost alt="" aria-hidden="true">
+              <div class="image-loader" data-image-loader aria-hidden="true"><span></span></div>
+            </div>
             <div class="artwork-toolbar">
               <button class="fullscreen-toggle" type="button" data-fullscreen-toggle aria-label="全屏浏览" aria-pressed="false" title="全屏浏览">
                 <svg class="icon-expand" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M9 4H4v5M15 4h5v5M15 20h5v-5M9 20H4v-5"></path></svg>
@@ -131,11 +136,6 @@
                 <span class="fullscreen-label" data-fullscreen-label>全屏浏览</span>
               </button>
             </div>
-          <div class="artwork-frame" data-artwork-frame>
-            <img data-main-artwork alt="" draggable="false">
-            <img class="artwork-ghost" data-artwork-ghost alt="" aria-hidden="true">
-            <div class="image-loader" data-image-loader aria-hidden="true"><span></span></div>
-          </div>
           </div>
           <div class="fullscreen-count" data-fullscreen-count aria-hidden="true"><b data-fullscreen-current>01</b><span>/</span><span data-fullscreen-total>01</span></div>
           <section class="other-projects" data-other-projects aria-label="其他项目">

@@ -53,7 +53,9 @@
 
 - 小号说明文字对比度必须 ≥ 4.5:1（`#8a929e`、`#7d8794`、`#9aa3ae` 等已按此校准，改色需复测）。
 - 程序化聚焦标题（`h1[tabindex="-1"]`）不显示焦点框；按钮/链接保留 `:focus-visible` 描边。
-- 手写体黄色年份「2016~2026」：`calc(clamp(12px, .95vw, 16px) + 9px)`（手机 16px、横屏 13px）。
+- 手写体黄色年份「2016~2026」：`calc(clamp(12px, .95vw, 16px) + 9px)`（手机 `clamp(12px, 4.1vw, 16px)`、横屏 13px）。
+- 品牌字（左上「TANG」）与首页大标题（`#home-title` 的「Resume & / Project Design Portfolio」）当前使用 **Arial 600**：`Arial, "Helvetica Neue", Helvetica, sans-serif`，`font-weight: 600`（Arial 只有 Regular/Bold 两个字重，600 实际会用到 Bold 字形；想真正介于两者之间需换 Helvetica Neue Medium / Inter 等有 500–600 字重的字体）。
+- 大标题字号随宽度缩放，保证「Project Design Portfolio」**始终单行**且年份不压住右侧个人信息：桌面 `clamp(26px, 3.4vw, 64px)`，手机 `clamp(14.8px, 4.6vw, 21px)`，横屏 24px。
 
 ### 3.5 响应式断点
 
@@ -73,10 +75,11 @@
 - 横向作品流：滚轮/拖拽带阻尼；拖拽后 400ms 内抑制误触点击。
 - 首页卡片 → 预览：点击后把卡片封面克隆成固定层，从卡片位置 FLIP 到作品框；在卡片尺寸阶段（约 0–200ms）就把封面溶解为第一页，页面层随扩张逐步还原为完整画面，膨胀结束与预览图同帧交接（交接前后像素 diff 为 0）。`prefers-reduced-motion` 下退化为原有淡入；中途 Esc/返回会清理过渡层。
 - 预览翻页：上下滑动/滚轮/键盘/缩略图翻页时，旧页向一侧滑出（位移 -100%、scale .98），新页从另一侧滑入（±100% → 0、scale 1.02 → 1），640ms `cubic-bezier(.76,0,.24,1)`；新图预加载完成后才启动动画；`prefers-reduced-motion` 直接切换。
-- 预览全屏：舞台右上角为胶囊按钮（图标 + 文案「全屏浏览 / 退出全屏」，`aria-pressed` + 动态 `aria-label`）；进入/退出用克隆层几何过渡（460ms），优先 Fullscreen API，不支持或被拒绝时降级 `.is-pseudo-fullscreen`（fixed inset 0、z-index 90）。全屏下隐藏缩略图条与站点导航、舞台 padding 归零、底部显示页码；控件在 2.4s 无操作后自动隐藏（0.35s 过渡），指针/触摸/键盘唤醒；Esc 先退出全屏、再按一次返回上一级，离开预览自动退出。全屏按钮放在大图上方独立的 `.artwork-toolbar` 列中（与 `.artwork-frame` 同宽、右对齐），距图片上边缘 16px，随大图尺寸变化，不覆盖图片、不锚定舞台或视口。
+- 预览全屏：舞台右上角为胶囊按钮（图标 + 文案「全屏浏览 / 退出全屏」，`aria-pressed` + 动态 `aria-label`）；进入/退出用克隆层几何过渡（460ms），优先 Fullscreen API，不支持或被拒绝时降级 `.is-pseudo-fullscreen`（fixed inset 0、z-index 90）。全屏下隐藏缩略图条与站点导航、舞台 padding 归零、底部显示页码；控件在 2.4s 无操作后自动隐藏（0.35s 过渡），指针/触摸/键盘唤醒；Esc 先退出全屏、再按一次返回上一级，离开预览自动退出。全屏按钮放在大图下方独立的 `.artwork-toolbar` 列中（与 `.artwork-frame` 同宽、水平居中），距图片下边缘 16px，随大图尺寸变化，不覆盖图片、不锚定舞台或视口。
 - 预览退出：从预览返回首页时，若来源是首页卡片且卡片仍可见，作品图以同样的 660ms 缓动缩回卡片位置；**缩到卡片尺寸之后**，再在卡片尺寸处柔和溶解回封面并交给首页（不允许先换封面再缩放）；卡片不可见时退化为普通淡出。缩略图栏按所在边缘滑出。
 - 缩略图导航动效：进入预览时缩略图栏从右侧（竖屏从底部）滑入，退出时向同侧滑出；首页卡片进入时在图片落位后再滑入。
-- 最后一页其他项目：严格只在项目最后一页出现；底部滑出「其他项目」面板（隐藏时 `visibility: hidden` 且被舞台裁剪，不占布局、不影响大图尺寸），按经历顺序（抖音 → 京东 → 金山）列出其他可预览项目；卡片从下往上逐个出现（index² 抛物线延迟）；点击用「缩略图 → 大图」克隆层过渡切换到该项目第 1 页；全屏下隐藏；滚轮在面板上横向滚动、不触发翻页。
+- 最后一页其他项目：严格只在项目最后一页出现；底部滑出「其他项目」面板（隐藏时 `visibility: hidden` 且被舞台裁剪，平时不占布局、不影响大图尺寸），按经历顺序（抖音 → 京东 → 金山）列出其他可预览项目；卡片从下往上逐个出现（index² 抛物线延迟）；点击用「缩略图 → 大图」克隆层过渡切换到该项目第 1 页；全屏下隐藏；滚轮在面板上横向滚动、不触发翻页。
+- 最后一页避让：面板展开时必须为它预留高度——`sizeArtworkFrame()` 用 `otherProjectsReserve()`（`panel.offsetHeight + 14px`）压缩大图可用高度，并按居中公式把 `.artwork-stack` 上移（CSS 变量 `--stack-shift`），保证「大图 + 全屏按钮」整体落在面板上方（按钮距面板 14px）；与面板 550ms 同时动画（`.is-panel-adjusting` 期间给 `.artwork-frame` 加宽高过渡，栈位移本身有过渡）。离开末页/进全屏时 reserve 归零并复位位移。短屏（`max-height: 520px`）面板同时压缩卡片与内边距，避免把大图挤得过小。
 
 ### 3.7 动效与过渡规范（全局）
 
@@ -100,15 +103,16 @@
 **全屏**
 
 - 进入/退出全屏必须有几何过渡（克隆层在当前大图矩形与全屏矩形之间 460ms 插值），不允许瞬间切换。
-- 全屏控件为右上角胶囊按钮（图标 + 「全屏浏览 / 退出全屏」）；全屏内 2.4s 无指针/触摸/键盘操作自动隐藏，任意操作唤醒，隐藏/显示 0.35s。
+- 全屏控件为大图下方居中的胶囊按钮（图标 + 「全屏浏览 / 退出全屏」），全屏下位于屏幕底部居中，页码移到右下角；全屏内 2.4s 无指针/触摸/键盘操作自动隐藏，任意操作唤醒，隐藏/显示 0.35s。
 - `Esc` 先退出全屏，再按一次返回上一级；离开预览自动退出全屏。
 
 **栏与面板**
 
 - 缩略图栏跟随所在边缘进出：右侧 `translateX(105%)`、底部 `translateY(105%)`，550ms。
 - 栏/控件的出现时机只取决于动画进度，**不得依赖网络图片加载完成**（首次进入时缩略图栏应在展开动画结束即滑入，而不是等 4K 大图 onload）。
-- 属于大图的控件（全屏按钮等）放在 `.artwork-stack` 的 `.artwork-toolbar` 内：与 `.artwork-frame` 同宽、右对齐、距图片上边缘 16px，随容器缩放，不覆盖图片，也不锚定舞台/视口。
-- 底部「其他项目」只在最后一页出现；隐藏态用 `visibility: hidden` + 父级 `overflow: hidden` 裁剪，不得占据布局或改变大图尺寸。
+- 属于大图的控件（全屏按钮等）放在 `.artwork-stack` 末尾的 `.artwork-toolbar` 内（图片之后）：与 `.artwork-frame` 同宽、水平居中、距图片下边缘 16px，随容器缩放，不覆盖图片，也不锚定舞台/视口。
+- 末页过渡期间（面板滑入/滑出 550ms）按钮可能短暂压在面板上方：`.artwork-toolbar` 需 `z-index` 高于面板（面板 6 / toolbar 7）且 `pointer-events: none`（按钮自己 `auto`），保证动画中按钮可点、面板卡片不被拦截。
+- 底部「其他项目」只在最后一页出现；隐藏态用 `visibility: hidden` + 父级 `overflow: hidden` 裁剪，平时不得占据布局或改变大图尺寸；**末页展开时**必须预留其高度（见 §3.6 最后一页避让），让大图与全屏按钮整体位于面板上方，不允许互相重叠。
 - 列表项逐个出现：从下往上，延迟按 `index²` 抛物线递增（如 2 项为 60ms / 210ms）。
 - 面板内项目点击同样走「缩略图 → 大图」克隆层过渡。
 
@@ -241,6 +245,37 @@
 - **修复**：把封面样式的复制延后到 `goHome()` 之后（首页已可见）再读取并写入克隆层；同时反向期间用 `.is-returning` 固定卡片 `img` 的静止 transform/filter 与 `::after` 遮罩，交接时二者完全一致，hover 在交接后仍按正常 1s 图片过渡缓动恢复。
 - **附带**：`clearViewerExit()` 同步移除 `.is-returning`，避免中途取消后类名残留。
 - **验证**：退出开始时克隆封面 `transform` = `matrix(1.08, 0, 0, 1.08, -5.82, 0)`，与卡片 img 一致；screencast 逐帧检测交接帧无像素跳变（相邻帧 diff < 3，远低于缩小过程 8–15）；8 视口布局回归通过，无 JS 报错。
+
+### 2026-11-06 · 品牌字与首页大标题改用 DIN Alternate
+
+- **字体替换**：左上品牌字「TANG」（`.brand-text b`）与首页大标题（`.home-heading h1`，#home-title 的「Resume & / Project Design Portfolio」）由 Impact 改为 **DIN Alternate Bold**（`font-weight: 700`，macOS 只有 Bold 一个字重），回退 `"DIN Condensed", "Helvetica Neue", Arial`；品牌字字距由 `-.02em` 调到 `.01em`，大标题字距由 `-.025em` 调到 `-.01em`，适配 DIN 的几何字形。
+- **原因**：Impact 过于压缩、偏海报感；DIN Alternate 更接近作品集想要的工程感与中性气质。其余标题（公司名、项目卡标题、面板标题等）仍保持 Impact，未受影响。
+- **随之修正的排版**：DIN 比 Impact 宽约 30%，原字号会导致大标题换行/年份压住右侧个人信息。标题字号改为随宽度缩放 `clamp(26px, 3.4vw, 64px)`（此前最小 38px，761–1024 宽度必换行）；手机 `clamp(17.5px, 5.4vw, 21px)` 保证 320 宽下「Portfolio + 2016~2026」不被右边缘裁切，年份字号同步改 `clamp(12px, 4.1vw, 16px)`。
+- **验证**：8 个基准视口 + 320–1920 共 25 档宽度扫描：标题始终单行、年份不与右侧个人信息/头像相交、无横向溢出、无 JS 报错；`run-qa.mjs`（6 视口交互，`home issues: none`）、`verify-fixes.mjs`、`measure-home-layout.mjs`（`cardClipped` 全为 false）、`measure-projects.mjs`（`cardClipped` 0 或负值）全部通过。
+- **工具修复（`.qa/`，不提交）**：`cdp.mjs` 无头 Chrome 补 `--no-sandbox --disable-crash-reporter --disable-breakpad`（本机原来一启动就 GPU 崩溃）；`run-qa.mjs` 的 `clickSelector` 增加「滚到可见再点」与移动端 8px 小目标兜底（竖屏缩略图条是 smooth 滚动，原 700ms 等待 + 固定第 4 张的写法会误判不可见；预览返回按钮在手机上只有 15px 图标），并把空 `src` 的 `<img>` 排除出「坏图」统计。
+
+### 2026-11-06 · 品牌字与首页大标题试改 Arial 600
+
+- **字体**：`.brand-text b` 与 `.home-heading h1` 改为 `Arial, "Helvetica Neue", Helvetica, sans-serif`，`font-weight: 600`，品牌字字距 `.02em`、大标题 `-.01em`；其余标题（公司名、项目卡、面板标题等）仍保持 Impact。
+- **字重说明（实测）**：Arial 只有 Regular/Bold 两个字重，600 会匹配到 Bold 字形——同字号下 600/700 的渲染宽度同为 717px，400/500 为 710px，所以视觉上等同 Arial Bold；若需要真正的中等字重，需换 Helvetica Neue Medium（500）或 Inter 等带 500–600 字重的字体。
+- **排版**：Arial 比 DIN 更宽（同字号标题行宽 309 vs 259，+19%）。手机端标题字号从 `clamp(17.5px, 5.4vw, 21px)` 调整为 `clamp(14.8px, 4.6vw, 21px)`，保证 320–430 宽下标题单行、黄色年份不越出右侧内边距；桌面/平板仍为 `clamp(26px, 3.4vw, 64px)`，横屏 24px。
+- **验证**：320–1920 共 25 档宽度扫描（标题不换行、年份不越界、不与头像/个人信息相交、无横向溢出）+ 8 基准视口截图；`run-qa.mjs`、`verify-fixes.mjs`、`measure-home-layout.mjs`、`measure-projects.mjs` 全部通过。
+- **回退**：DIN Alternate 版本保留在 git 历史中，改回两处 `font-family`/`font-weight` 即可恢复。
+
+### 2026-11-06 · 全屏按钮移到大图预览下方居中
+
+- **位置**：`.artwork-toolbar` 从 `artwork-frame` 之前移到之后，按钮由「图片上方右对齐」改为「图片下方水平居中」，与图片间距仍为 16px（`.artwork-stack` 改 `align-items: center`，toolbar 改 `justify-content: center`）；`sizeArtworkFrame()` 预留 toolbar 高度的逻辑不变，大图尺寸、切换过渡与克隆层目标矩形完全不受影响。
+- **末页叠层**：最后一页「其他项目」面板从底部滑出会盖住这条 34px 控制带，因此给 `.artwork-toolbar` 设 `z-index: 7`（面板为 6）并 `pointer-events: none`，按钮单独 `pointer-events: auto`：按钮浮在面板之上且可点，面板卡片点击不被透明工具条拦截。
+- **全屏页码**：全屏下按钮位于底部居中，原本底部居中的页码会与它重叠，页码改到右下角（`right: clamp(16px, 2.2vw, 34px); bottom: 24px`）；空闲自动隐藏时按钮改为向下轻移 6px（原来是向上）。
+- **验证**：1920/1440/1280/1024/768/390/320/844×390 共 8 个视口实测「图片下边缘 → 按钮上边缘 = 16px、按钮水平居中偏差 0」；真实 Fullscreen API 进入/退出正常，`aria-pressed` 与「全屏浏览/退出全屏」文案同步；末页（面板展开）8 视口中 34px 垂直重叠下 `elementFromPoint` 命中按钮，面板卡片仍可点击；普通/末页/全屏截图视觉检查通过，无 JS 报错。
+
+### 2026-11-06 · 最后一页为「其他项目」面板让位（大图与全屏按钮上移）
+
+- **问题**：全屏按钮移到图片下方后，最后一页「其他项目」面板从底部滑出会盖住按钮与图片底部；其他项目越多，面板越高、重叠越明显。
+- **避让逻辑**：`sizeArtworkFrame()` 先调用 `otherProjectsReserve()` 取 `panel.offsetHeight + 14px`（仅末页且非全屏时非 0），从可用高度中扣除后重新按 16:9 计算大图尺寸；再按「居中后的栈底」公式算出需要上移的距离写入 `--stack-shift`，由 `.viewer-screen.is-last-slide .artwork-stack` 应用 `translateY`。这样大图与按钮整体落在面板上方，按钮距面板固定 14px。
+- **动画**：`showSlide` 里改为 `setLastSlide()`，切换末页时给 `.artwork-frame` 临时加 `.is-panel-adjusting`（宽高 550ms 过渡），栈位移本身带 550ms 过渡，与面板滑入/滑出同步；进入预览/全屏的克隆层过渡期间（`.is-scene-entering`）禁用这两个过渡，避免与交接测量冲突；全屏下 reserve 归零、栈位移取消（`.viewer-screen.is-fullscreen .artwork-stack { transform: none }`）。
+- **短屏压缩**：`max-height: 520px` 时同步压缩「其他项目」面板（卡片 84–120px、隐藏副标题、收紧内边距），面板高度 167→106px，横屏手机上大图仍有 245×138，不会被挤到不可用。
+- **验证**：1440/1280/1920 末页大图 901×507 / 745×419 / 1212×682，按钮与面板间距均 14–15px；768/390 无需压缩（间距 26/55px）；320 与 844×390 位移 -71/-73px、间距 15/14px，均无重叠；进入/离开末页、末页进出全屏、面板卡片切换项目、`elementFromPoint` 命中按钮均通过；`run-qa`/`verify-fixes`/`measure-home-layout`/`measure-projects` 全绿，无 JS 报错。
 
 ### 2026-11-10 · 首页经历信息与作品图上下对调
 

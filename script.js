@@ -140,6 +140,7 @@ const elements = {
   viewerStage: document.querySelector("[data-viewer-stage]"),
   homeScreen: document.querySelector('[data-screen="home"]'),
   otherProjectsRail: document.querySelector("[data-other-projects-rail]"),
+  otherProjects: document.querySelector("[data-other-projects]"),
   streamShell: document.querySelector("[data-stream-shell]"),
   streamProgress: document.querySelector("[data-stream-progress]"),
   viewerBackLabel: document.querySelector("[data-viewer-back-label]")
@@ -311,15 +312,34 @@ elements.thumbnailRail.addEventListener("scroll", updateRailMask, { passive: tru
 /* The artwork frame hugs the artwork instead of the whole stage, so the
    image never letterboxes inside its own container and the click transition
    can hand off to an identical rectangle. */
+function otherProjectsReserve() {
+  const panel = elements.otherProjects;
+  const screen = elements.viewerScreen;
+  if (!panel || !screen || !screen.classList.contains("is-last-slide") || isViewerFullscreen()) return 0;
+  return panel.offsetHeight + 14;
+}
+
+/* the last page panel slides over the stage bottom: reserve its height so the
+   artwork + fullscreen button sit above it instead of under the project cards */
+function syncPanelReserve() {
+  const screen = elements.viewerScreen;
+  const reserve = otherProjectsReserve();
+  screen.style.setProperty("--panel-reserve", `${reserve}px`);
+  return reserve;
+}
+
 function sizeArtworkFrame() {
   const stage = elements.viewerStage;
   const frame = elements.artworkFrame;
   if (!stage || !frame) return;
   const style = window.getComputedStyle(stage);
+  const padTop = parseFloat(style.paddingTop);
+  const padBottom = parseFloat(style.paddingBottom);
   const availableWidth = stage.clientWidth - parseFloat(style.paddingLeft) - parseFloat(style.paddingRight);
   const toolbar = elements.fullscreenToggle?.closest(".artwork-toolbar");
   const toolbarHeight = toolbar ? toolbar.offsetHeight + 16 : 0;
-  const availableHeight = stage.clientHeight - parseFloat(style.paddingTop) - parseFloat(style.paddingBottom) - toolbarHeight;
+  const reserve = syncPanelReserve();
+  const availableHeight = stage.clientHeight - padTop - padBottom - toolbarHeight - reserve;
   if (availableWidth <= 0 || availableHeight <= 0) return;
   const artwork = elements.artwork;
   const ratio = artwork.naturalWidth && artwork.naturalHeight ? artwork.naturalWidth / artwork.naturalHeight : 16 / 9;
@@ -331,6 +351,32 @@ function sizeArtworkFrame() {
   }
   frame.style.width = `${Math.round(width)}px`;
   frame.style.height = `${Math.round(height)}px`;
+  // the "other projects" panel overlays the stage bottom: nudge the whole
+  // stack (artwork + fullscreen button) up so it ends above the panel
+  const stackHeight = height + toolbarHeight;
+  const contentHeight = stage.clientHeight - padTop - padBottom;
+  const stackBottom = padTop + (contentHeight + stackHeight) / 2;
+  const overlap = Math.max(0, stackBottom - (stage.clientHeight - reserve));
+  elements.viewerScreen.style.setProperty("--stack-shift", `${Math.round(overlap)}px`);
+}
+
+let panelAdjustTimer = 0;
+
+function setLastSlide(active) {
+  const screen = elements.viewerScreen;
+  const wasLast = screen.classList.contains("is-last-slide");
+  if (wasLast === active) {
+    sizeArtworkFrame();
+    return;
+  }
+  if (!screen.classList.contains("is-scene-entering")) {
+    // the panel slides in/out over 550ms; resize + shift the artwork with it
+    screen.classList.add("is-panel-adjusting");
+    window.clearTimeout(panelAdjustTimer);
+    panelAdjustTimer = window.setTimeout(() => screen.classList.remove("is-panel-adjusting"), 620);
+  }
+  screen.classList.toggle("is-last-slide", active);
+  sizeArtworkFrame();
 }
 
 const contactToggle = document.querySelector("[data-contact-toggle]");
@@ -505,7 +551,9 @@ function renderViewer() {
   elements.viewerTitle.textContent = project.name;
   elements.totalCount.textContent = pad(project.slides.length);
   elements.fullscreenTotal.textContent = pad(project.slides.length);
-  elements.viewerScreen.classList.remove("is-last-slide");
+  elements.viewerScreen.classList.remove("is-last-slide", "is-panel-adjusting");
+  window.clearTimeout(panelAdjustTimer);
+  elements.viewerScreen.style.setProperty("--stack-shift", "0px");
   renderOtherProjects();
   elements.thumbnailRail.innerHTML = project.slides.map((slide, index) => `
     <button class="thumbnail${index === state.slideIndex ? " is-current" : ""}" type="button" data-slide-index="${index}" role="option" aria-selected="${index === state.slideIndex}" tabindex="${index === state.slideIndex ? 0 : -1}" aria-label="查看第 ${index + 1} 页">
@@ -622,7 +670,8 @@ function showSlide(index, scrollThumbnail = true) {
   const slide = project.slides[state.slideIndex];
   elements.currentCount.textContent = pad(state.slideIndex + 1);
   elements.fullscreenCurrent.textContent = pad(state.slideIndex + 1);
-  elements.viewerScreen.classList.toggle("is-last-slide", state.slideIndex === project.slides.length - 1);
+  const isLastSlide = state.slideIndex === project.slides.length - 1;
+  setLastSlide(isLastSlide);
 
   if (direction === 0) {
     resetArtworkLayers();
