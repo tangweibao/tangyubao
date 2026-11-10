@@ -33,7 +33,7 @@ const kingsoftSlides = kingsoftPages.map((number, index) => ({
 const experiences = {
   douyin: {
     id: "douyin",
-    period: "2022 — NOW",
+    period: "2022~NOW",
     company: "抖音",
     mark: "d",
     logo: "assets/marks/douyin.webp",
@@ -58,7 +58,7 @@ const experiences = {
   },
   jd: {
     id: "jd",
-    period: "2020 — 2022",
+    period: "2020~2022",
     company: "京东零售",
     mark: "JD",
     logo: "assets/marks/jd.webp",
@@ -82,7 +82,7 @@ const experiences = {
   },
   kingsoft: {
     id: "kingsoft",
-    period: "2016 — 2020",
+    period: "2016~2020",
     company: "金山办公",
     mark: "W",
     logo: "assets/marks/kingsoft.webp",
