@@ -389,9 +389,12 @@ function renderTimeline() {
   elements.timeline.innerHTML = Object.values(experiences).map((experience) => `
     <section class="experience-group" style="--accent:${experience.accent};--mark-bg:${experience.markBg}">
       <header class="group-meta">
-        <span class="group-index">${experience.period}</span>
         <span class="group-mark${experience.logo ? " has-logo" : ""}" aria-hidden="true">${experience.logo ? `<img src="${experience.logo}" alt="" loading="lazy" decoding="async">` : experience.mark}</span>
-        <b class="group-company">${experience.company}</b>
+        <span class="group-identity">
+          <span class="group-index">${experience.period}</span>
+          <b class="group-company">${experience.company}</b>
+        </span>
+        <span class="group-divider" aria-hidden="true"></span>
         <span class="group-copy">
           <strong>${experience.role}</strong>
           <small>${experience.meta}</small>
