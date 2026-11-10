@@ -445,7 +445,7 @@ body[data-screen="viewer"] .viewer-nav { animation: viewer-nav-in .62s var(--eas
 .experience-group:not(:first-child)::before { content: ""; position: absolute; top: 0; left: -1px; width: 1px; height: calc(100% - 8px); background: linear-gradient(to bottom, rgba(255,255,255,.12), rgba(255,255,255,.018) 70%, transparent); transform-origin: top; animation: divider-in 1s .35s both var(--ease); }
 @keyframes divider-in { from { transform: scaleY(0); } to { transform: scaleY(1); } }
 
-.group-meta { grid-row: 2; display: flex; align-items: center; gap: clamp(9px, .9vw, 15px); min-width: 0; }
+.group-meta { grid-row: 2; display: flex; align-items: center; gap: clamp(9px, .9vw, 15px); min-width: 0; margin-bottom: clamp(12px, 2vh, 22px); }
 .group-identity { display: flex; flex-direction: column; align-items: flex-start; gap: 2px; min-width: 0; }
 .group-identity .group-index, .group-identity .group-company { white-space: nowrap; }
 .group-divider { flex: 0 0 auto; width: 1px; height: clamp(24px, 3.4vh, 38px); background: linear-gradient(to bottom, transparent, rgba(255, 255, 255, .22) 18%, rgba(255, 255, 255, .22) 82%, transparent); }
@@ -459,7 +459,7 @@ body[data-screen="viewer"] .viewer-nav { animation: viewer-nav-in .62s var(--eas
 .group-copy small { color: #8a929e; font-size: clamp(10px, .85vw, 12px); letter-spacing: .06em; line-height: 1.35; }
 .group-projects { grid-row: 1; display: flex; align-items: stretch; gap: var(--group-gap); min-height: 0; }
 
-.stream-project { position: relative; z-index: 1; flex: 0 0 auto; width: clamp(175px, 15vw, 270px); height: clamp(337px, 50vh, 587px); max-height: 100%; align-self: start; overflow: hidden; padding: 0; border: 0; background: #1a1b1d; color: #fff; text-align: left; cursor: pointer; animation: stream-card-in .9s both var(--ease); transition: transform .7s var(--ease), filter .55s, opacity .45s, box-shadow .5s; }
+.stream-project { position: relative; z-index: 1; flex: 0 0 auto; width: clamp(175px, 15vw, 270px); height: 100%; max-height: 100%; align-self: stretch; overflow: hidden; padding: 0; border: 0; background: #1a1b1d; color: #fff; text-align: left; cursor: pointer; animation: stream-card-in .9s both var(--ease); transition: transform .7s var(--ease), filter .55s, opacity .45s, box-shadow .5s; }
 .stream-project:nth-child(2) { animation-delay: .08s; }
 .stream-project:nth-child(3) { animation-delay: .16s; }
 @keyframes stream-card-in { from { opacity: 0; translate: 0 36px; } to { opacity: 1; translate: 0; } }
