@@ -39,7 +39,7 @@ const experiences = {
     logo: "assets/marks/bytedance.webp",
     accent: "#3c8cff",
     markBg: "#11151b",
-    role: "平台产品设计专家 & AI 全栈",
+    role: "平台产品设计专家",
     meta: "创作平台设计负责人 · 5人团队",
     caption: "项目主导与管理",
     projectNames: ["抖音创作服务平台", "抖音分成", "抖音精选"],

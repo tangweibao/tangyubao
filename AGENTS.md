@@ -31,7 +31,7 @@
 从左到右四组：
 
 1. **公司图标**：46px 桌面 / 40px 手机 / 34px 矮窗口 / 27px 横屏（图形自带圆角，不加额外描边）
-2. **公司名 + 时间段**（组合内上下两行，公司名在上）：公司名 Impact 字族 `clamp(15px, 1.35vw, 21px)`；时间 DIN Alternate 700，16px 桌面 / 14.4px 手机 / 12.8px 矮窗口 / 11.2px 横屏，颜色 `#9aa3ae`，格式用波浪号（`2022~NOW`、`2020~2022`、`2016~2020`）
+2. **公司名 + 时间段**（组合内上下两行，公司名在上）：公司名 Impact 字族 `clamp(13px, 1.15vw, 18px)`（手机 14px / 矮窗口 12.5px / 横屏 10.5px）；时间 DIN Alternate 700，16px 桌面 / 14.4px 手机 / 12.8px 矮窗口 / 11.2px 横屏，颜色 `#9aa3ae`，格式用波浪号（`2022~NOW`、`2020~2022`、`2016~2020`）
 3. **浅色竖分割线**：1px、上下渐隐，高度 `clamp(24px, 3.4vh, 38px)`（手机 30px、矮窗口 26px、横屏 22px）
 4. **职能角色 + 负责信息**（组合内上下两行）：字号 `clamp(10px, .85vw, 12px)`；角色 `#b4b8be`，负责信息 `#8a929e`
 
@@ -55,8 +55,8 @@
 - 小号说明文字对比度必须 ≥ 4.5:1（`#8a929e`、`#7d8794`、`#9aa3ae` 等已按此校准，改色需复测）。
 - 程序化聚焦标题（`h1[tabindex="-1"]`）不显示焦点框；按钮/链接保留 `:focus-visible` 描边。
 - 手写体黄色年份「2016~2026」：`calc(clamp(12px, .95vw, 16px) + 9px)`（手机 `clamp(12px, 4.1vw, 16px)`、横屏 13px）。
-- 品牌字（左上「TANG」）与首页大标题（`#home-title` 的「Resume & / Project Design Portfolio」）当前使用 **Arial 600**：`Arial, "Helvetica Neue", Helvetica, sans-serif`，`font-weight: 600`（Arial 只有 Regular/Bold 两个字重，600 实际会用到 Bold 字形；想真正介于两者之间需换 Helvetica Neue Medium / Inter 等有 500–600 字重的字体）。
-- 大标题字号随宽度缩放，保证「Project Design Portfolio」**始终单行**且年份不压住右侧个人信息：桌面 `clamp(26px, 3.4vw, 64px)`，手机 `clamp(14.8px, 4.6vw, 21px)`，横屏 24px。
+- 品牌字（左上「TANG」）与首页大标题（`#home-title` 两行：**Project Design** / **Portfolio** + 黄色手写年份「2016~2026」；已去掉原先的「Resume &」）当前使用 **Arial 600**：`Arial, "Helvetica Neue", Helvetica, sans-serif`，`font-weight: 600`（Arial 只有 Regular/Bold 两个字重，600 实际会用到 Bold 字形；想真正介于两者之间需换 Helvetica Neue Medium / Inter 等有 500–600 字重的字体）。
+- 大标题字号随宽度缩放，保证两行「Project Design / Portfolio」**各自单行**、年份「2016~2026」不压住右侧个人信息：桌面 `clamp(26px, 3.4vw, 64px)`，手机 `clamp(14.8px, 4.6vw, 21px)`，横屏 24px。
 
 ### 3.5 响应式断点
 
@@ -321,3 +321,10 @@
 - **品牌色**：`accent` 由抖音青 `#20c7d9` 改为字节跳动蓝 `#3c8cff`（项目导航页图标外发光、项目序号底色用色）。
 - **文案同步**：首页右上个人信息、联系名片与 `<meta name="description">` 里的「抖音产品设计专家」「涵盖抖音、京东零售…」统一改为「字节跳动」；首页/项目页/预览页导航/「其他项目」面板的公司名均随数据自动更新（预览页显示「字节跳动 · 2022~NOW」）。
 - **验证**：1440×900 首页 46px 图标、项目页 54px 图标、预览页导航文案截图检查通过；`run-qa`（6 视口 `home issues: none`、无失败请求、无 404）、`verify-fixes`、`measure-home-layout`（`cardClipped` 全 false）、`measure-projects`（`cardClipped` 0）全绿。
+
+### 2026-11-10 · 首页大标题改两行、去掉 AI 全栈、经历公司名缩小
+
+- **首页大标题**：由「Resume & / Project Design Portfolio + 2016~2026」改为 **「Project Design / Portfolio + 2016~2026」**（行结构不变：两行 `title-row`，年份 `em.portfolio-years` 仍绝对定位在第二行末尾、手写体黄色）。去掉「Resume &」后两行各自更短，桌面/手机/横屏均单行不换行、年份不压右侧个人信息。
+- **去掉 AI 全栈**：`role`（经历职能）由「平台产品设计专家 & AI 全栈」改为「平台产品设计专家」；首页右上个人信息与联系名片里的「1992年，本科，字节跳动产品设计专家 · AI全栈」删掉「 · AI全栈」。
+- **经历标题缩小**：公司名 `.group-company` 由 `clamp(15px, 1.35vw, 21px)` 改为 `clamp(13px, 1.15vw, 18px)`，响应式同步 16 → 14px 手机、14 → 12.5px 矮窗口、12 → 10.5px 横屏；四组信息顺序与分割线不受影响。
+- **验证**：1920×1080 / 1440×900 / 390×844 / 844×390 截图检查标题两行与年份位置、公司名字号；`run-qa`（6 视口 `home issues: none`）、`verify-fixes`、`measure-home-layout`（`cardClipped` 全 false、信息块高度 47px 桌面）、`measure-projects`（`cardClipped` 0）全绿。

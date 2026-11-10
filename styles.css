@@ -461,7 +461,7 @@ body[data-screen="viewer"] .viewer-nav { animation: viewer-nav-in .62s var(--eas
 .group-mark.has-logo { background: transparent; }
 .group-mark img, .company-mark img { display: block; width: 100%; height: 100%; object-fit: contain; }
 .group-copy { display: flex; flex-direction: column; gap: 3px; min-width: 0; flex: 1 1 auto; }
-.group-company { color: #f0f0ed; font-family: Impact, Haettenschweiler, "Arial Narrow Bold", sans-serif; font-size: clamp(15px, 1.35vw, 21px); font-weight: 500; letter-spacing: -.01em; text-transform: uppercase; }
+.group-company { color: #f0f0ed; font-family: Impact, Haettenschweiler, "Arial Narrow Bold", sans-serif; font-size: clamp(13px, 1.15vw, 18px); font-weight: 500; letter-spacing: -.01em; text-transform: uppercase; }
 .group-copy strong { color: #b4b8be; font-size: clamp(10px, .85vw, 12px); font-weight: 450; letter-spacing: .03em; line-height: 1.35; }
 .group-copy small { color: #8a929e; font-size: clamp(10px, .85vw, 12px); letter-spacing: .06em; line-height: 1.35; }
 .group-projects { grid-row: 1; display: flex; align-items: stretch; gap: var(--group-gap); min-height: 0; }
@@ -539,7 +539,7 @@ body[data-screen="viewer"] .viewer-nav { animation: viewer-nav-in .62s var(--eas
   .group-divider { height: 30px; }
   .group-mark { width: 40px; height: 40px; }
   .group-index { font-size: 14.4px; }
-  .group-company { font-size: 16px; }
+  .group-company { font-size: 14px; }
   .group-copy { gap: 2px; }
   .group-copy strong, .group-copy small { font-size: 10px; }
   .stream-project { width: 62vw; max-width: 270px; height: min(54vh, 487px); }
@@ -599,7 +599,7 @@ body[data-screen="viewer"] .viewer-nav { animation: viewer-nav-in .62s var(--eas
   .group-meta { gap: 8px; }
   .group-divider { height: 26px; }
   .group-mark { width: 34px; height: 34px; }
-  .group-company { font-size: 14px; }
+  .group-company { font-size: 12.5px; }
   .group-index { font-size: 12.8px; }
   .stream-project { height: min(42vh, 300px); }
   .experience-card { padding-top: 29px; }
@@ -630,7 +630,7 @@ body[data-screen="viewer"] .viewer-nav { animation: viewer-nav-in .62s var(--eas
   .group-divider { height: 22px; }
   .experience-group:last-child { padding-right: 70px; }
   .group-mark { width: 27px; height: 27px; font-size: 7px; }
-  .group-company { font-size: 12px; }
+  .group-company { font-size: 10.5px; }
   .group-index { font-size: 11.2px; }
   .group-copy strong, .group-copy small { font-size: 10px; }
   .stream-project { width: clamp(150px, 22vw, 220px); height: auto; align-self: stretch; }
