@@ -30,6 +30,47 @@ const kingsoftSlides = kingsoftPages.map((number, index) => ({
   alt: `金山词霸案例第 ${index + 1} 页`
 }));
 
+/* ---------------------------------------------------------------------------
+   Composite slides: one PPT background image with media boxes laid on top.
+   Every box is positioned in percentages of the frame, so the page scales as
+   a single unit and the boxes never drift between viewports.
+   `demoOverlays` is a placeholder until the real pages land via the local
+   placement editor (.qa/media/compose.html).
+--------------------------------------------------------------------------- */
+const isComposite = (slide) => Boolean(slide && slide.type === "composite");
+const slideSource = (slide) => (isComposite(slide) ? slide.background : slide?.src);
+const slideThumb = (slide) => slide?.thumb || slideSource(slide);
+const slideVideoCount = (slide) =>
+  isComposite(slide) ? (slide.overlays || []).filter((overlay) => overlay.kind === "video").length : 0;
+const slideHasVideo = (slide) => slideVideoCount(slide) > 0;
+
+/* 真实 PPT 页：亲声伴读 · iOS 端 AI 开发实践（第 5 页）。
+   背景图已按空框位置量好（x/y/w/h 为相对整页的百分比），
+   视频源先用 demo 片段占位——真实视频转码后只替换 src / poster 两行即可。 */
+const readingSlide = {
+  type: "composite",
+  background: "assets/demo/ai-reading-01.jpg",
+  thumb: "assets/slide-thumbs/ai-reading-01.jpg",
+  alt: "亲声伴读：iOS 端 AI 开发实践（PPT 背景图 + 演示视频）",
+  overlays: [
+    {
+      kind: "video",
+      id: "reading-demo",
+      label: "亲声伴读 · iOS AI 实践演示",
+      src: "assets/video/demo-1080p.mp4",
+      poster: "assets/video/demo-poster.jpg",
+      box: { x: 41.02, y: 33.01, w: 52.45, h: 54.35 },
+      fit: "cover",
+      radius: 1,
+      muted: true,
+      loop: false,
+      controls: "native"
+    }
+  ]
+};
+
+douyinSlides.splice(1, 0, readingSlide);
+
 const experiences = {
   douyin: {
     id: "douyin",
@@ -42,7 +83,7 @@ const experiences = {
     role: "平台产品设计师",
     meta: "创作平台设计负责人",
     caption: "项目主导与管理",
-    projectNames: ["抖音创作服务平台", "抖音分成", "抖音精选"],
+    projectNames: ["抖音创作服务平台"],
     projects: [
       {
         id: "douyin-platform",
@@ -51,9 +92,7 @@ const experiences = {
         description: "创作者与机构的一站式服务平台",
         cover: "assets/thumbs/douyin.jpg",
         slides: douyinSlides
-      },
-      { id: "douyin-revenue", name: "抖音分成", type: "CREATOR BUSINESS", description: "项目资料待补充", cover: "assets/slide-thumbs/douyin-12.jpg", disabled: true },
-      { id: "douyin-featured", name: "抖音精选", type: "CONTENT PRODUCT", description: "项目资料待补充", cover: "assets/slide-thumbs/douyin-32.jpg", disabled: true }
+      }
     ]
   },
   jd: {
@@ -67,7 +106,7 @@ const experiences = {
     role: "资深体验设计师",
     meta: "数坊项目设计负责人",
     caption: "项目主导与管理",
-    projectNames: ["京东数坊平台 · 营销数据", "黄金眼数据平台 · 自营数据"],
+    projectNames: ["京东数坊平台 · 营销数据"],
     projects: [
       {
         id: "jd-shufang",
@@ -76,8 +115,7 @@ const experiences = {
         description: "融合营销数据产品与复杂信息体验",
         cover: "assets/thumbs/jd.jpg",
         slides: jdSlides
-      },
-      { id: "jd-golden-eye", name: "黄金眼数据平台 · 自营数据", type: "DATA PLATFORM", description: "项目资料待补充", cover: "assets/slide-thumbs/jd-37.jpg", disabled: true }
+      }
     ]
   },
   kingsoft: {
@@ -91,7 +129,7 @@ const experiences = {
     role: "高级 UI 设计师",
     meta: "设计执行角色",
     caption: "项目主导",
-    projectNames: ["金山词霸", "小米邮箱", "WPS Office"],
+    projectNames: ["金山词霸"],
     projects: [
       {
         id: "kingsoft-powerword",
@@ -100,9 +138,7 @@ const experiences = {
         description: "学习、效率与增长场景的移动产品体验",
         cover: "assets/thumbs/mobile.jpg",
         slides: kingsoftSlides
-      },
-      { id: "xiaomi-mail", name: "小米邮箱", type: "MOBILE PRODUCT", description: "项目资料待补充", cover: "assets/slide-thumbs/kingsoft-07.jpg", disabled: true },
-      { id: "wps-office", name: "WPS Office", type: "PRODUCTIVITY", description: "项目资料待补充", cover: "assets/slide-thumbs/kingsoft-11.jpg", disabled: true }
+      }
     ]
   }
 };
@@ -130,6 +166,7 @@ const elements = {
   totalCount: document.querySelector("[data-total-count]"),
   artwork: document.querySelector("[data-main-artwork]"),
   artworkGhost: document.querySelector("[data-artwork-ghost]"),
+  slideCanvas: document.querySelector("[data-slide-canvas]"),
   loader: document.querySelector("[data-image-loader]"),
   thumbnailRail: document.querySelector("[data-thumbnail-rail]"),
   artworkFrame: document.querySelector("[data-artwork-frame]"),
@@ -351,6 +388,9 @@ function sizeArtworkFrame() {
   }
   frame.style.width = `${Math.round(width)}px`;
   frame.style.height = `${Math.round(height)}px`;
+  // 1% of the frame width: media-box radii/shadows are stored as percentages
+  // so they scale with the page instead of looking oversized on small screens
+  if (elements.slideCanvas) elements.slideCanvas.style.setProperty("--frame-unit", `${width / 100}px`);
   // the "other projects" panel overlays the stage bottom: nudge the whole
   // stack (artwork + fullscreen button) up so it ends above the panel
   const stackHeight = height + toolbarHeight;
@@ -555,12 +595,16 @@ function renderViewer() {
   window.clearTimeout(panelAdjustTimer);
   elements.viewerScreen.style.setProperty("--stack-shift", "0px");
   renderOtherProjects();
-  elements.thumbnailRail.innerHTML = project.slides.map((slide, index) => `
-    <button class="thumbnail${index === state.slideIndex ? " is-current" : ""}" type="button" data-slide-index="${index}" role="option" aria-selected="${index === state.slideIndex}" tabindex="${index === state.slideIndex ? 0 : -1}" aria-label="查看第 ${index + 1} 页">
-      <img src="${slide.thumb}" alt="" loading="lazy">
+  elements.thumbnailRail.innerHTML = project.slides.map((slide, index) => {
+    const videoCount = slideVideoCount(slide);
+    const badge = videoCount ? `<i class="thumbnail-play" aria-hidden="true">▶${videoCount > 1 ? videoCount : ""}</i>` : "";
+    return `
+    <button class="thumbnail${index === state.slideIndex ? " is-current" : ""}" type="button" data-slide-index="${index}" role="option" aria-selected="${index === state.slideIndex}" tabindex="${index === state.slideIndex ? 0 : -1}" aria-label="查看第 ${index + 1} 页${videoCount ? "（含视频）" : ""}">
+      <img src="${slideThumb(slide)}" alt="" loading="lazy">
+      ${badge}
       <b>${pad(index + 1)}</b>
-    </button>
-  `).join("");
+    </button>`;
+  }).join("");
   showSlide(state.slideIndex, false);
   window.requestAnimationFrame(updateRailMask);
 }
@@ -580,10 +624,141 @@ function placeArtwork(slide) {
   elements.loader.classList.add("is-active");
   elements.artwork.onload = markArtworkReady;
   elements.artwork.onerror = markArtworkReady;
-  elements.artwork.src = slide.src;
-  elements.artwork.alt = slide.alt;
+  elements.artwork.src = slideSource(slide);
+  elements.artwork.alt = slide.alt || "";
+  renderOverlays(slide);
   if (elements.artwork.complete) markArtworkReady();
 }
+
+/* ---- composite page media boxes -------------------------------------------
+   Every box starts as a poster + play button. The <video> element is created
+   on first click and its src is only attached then, so a page with three
+   demos costs three small JPEGs until the visitor actually plays one. */
+
+const mediaVideoPlaying = new Set();
+
+function resetMediaBoxes() {
+  const canvas = elements.slideCanvas;
+  if (!canvas) return;
+  canvas.querySelectorAll("video").forEach((video) => {
+    try { video.pause(); } catch { /* ignore */ }
+    video.removeAttribute("src");
+    video.load();
+  });
+  mediaVideoPlaying.clear();
+  canvas.innerHTML = "";
+  canvas.hidden = true;
+  canvas.style.opacity = "";
+}
+
+function pauseAllMedia() {
+  elements.slideCanvas?.querySelectorAll("video").forEach((video) => {
+    try { video.pause(); } catch { /* ignore */ }
+  });
+}
+
+function startVideo(box, overlay, button) {
+  if (box.dataset.playing === "true") return;
+  // one playing demo per page: starting a second one pauses the first
+  elements.slideCanvas?.querySelectorAll("video").forEach((other) => {
+    if (other === box.querySelector("video")) return;
+    try { other.pause(); } catch { /* ignore */ }
+    const otherBox = other.closest(".media-box");
+    if (otherBox) otherBox.dataset.playing = "false";
+  });
+  box.classList.add("is-loading");
+  let video = box.querySelector("video");
+  if (!video) {
+    video = document.createElement("video");
+    video.className = "media-video";
+    video.muted = overlay.muted !== false;
+    video.loop = Boolean(overlay.loop);
+    video.playsInline = true;
+    video.preload = "none";
+    video.controls = overlay.controls !== "off";
+    video.setAttribute("playsinline", "");
+    if (overlay.poster) video.poster = overlay.poster;
+    video.addEventListener("playing", () => {
+      box.classList.remove("is-loading");
+      box.dataset.playing = "true";
+      button.classList.add("is-hidden");
+    });
+    video.addEventListener("waiting", () => box.classList.add("is-loading"));
+    video.addEventListener("ended", () => {
+      box.dataset.playing = "false";
+      button.classList.remove("is-hidden");
+    });
+    box.append(video);
+  }
+  if (!video.src) video.src = overlay.src;
+  if (video.readyState < 2) video.load();
+  const started = video.play();
+  if (started?.catch) {
+    started.catch(() => {
+      box.classList.remove("is-loading");
+      button.classList.remove("is-hidden");
+    });
+  }
+}
+
+function renderOverlays(slide) {
+  const canvas = elements.slideCanvas;
+  if (!canvas) return;
+  resetMediaBoxes();
+  if (!isComposite(slide)) return;
+  const overlays = slide.overlays || [];
+  if (!overlays.length) return;
+  canvas.hidden = false;
+  overlays.forEach((overlay) => {
+    if (!overlay?.box) return;
+    const box = document.createElement("div");
+    box.className = "media-box";
+    box.dataset.mediaId = overlay.id || "";
+    box.style.left = `${overlay.box.x}%`;
+    box.style.top = `${overlay.box.y}%`;
+    box.style.width = `${overlay.box.w}%`;
+    box.style.height = `${overlay.box.h}%`;
+    box.style.setProperty("--media-radius", overlay.radius ?? 0);
+    box.style.setProperty("--media-shadow", overlay.shadow ?? 0);
+    if (overlay.z != null) box.style.zIndex = String(overlay.z);
+    if (overlay.opacity != null) box.style.opacity = String(overlay.opacity);
+    if (overlay.fit === "contain") box.classList.add("is-contain");
+    if (overlay.kind === "image") {
+      // static PNG layer (may carry transparency, e.g. a screenshot poured into
+      // a device frame drawn on the PPT background); never intercepts clicks
+      box.classList.add("is-image");
+      const image = document.createElement("img");
+      image.className = "media-image";
+      image.src = overlay.src || "";
+      image.alt = overlay.alt || overlay.label || "";
+      image.decoding = "async";
+      image.draggable = false;
+      if (overlay.fit !== "cover") box.classList.add("is-contain");
+      box.append(image);
+      canvas.append(box);
+      return;
+    }
+    if (overlay.kind !== "video") return;
+
+    const poster = document.createElement("img");
+    poster.className = "media-poster";
+    poster.src = overlay.poster || "";
+    poster.alt = "";
+    poster.decoding = "async";
+    poster.draggable = false;
+    box.append(poster);
+
+    const button = document.createElement("button");
+    button.className = "media-play";
+    button.type = "button";
+    button.setAttribute("aria-label", `播放视频：${overlay.label || "页面演示"}`);
+    button.innerHTML = '<span class="media-play-icon" aria-hidden="true"><svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M9 6.4 18.2 12 9 17.6z"></path></svg></span>';
+    button.addEventListener("click", () => startVideo(box, overlay, button));
+    box.append(button);
+    canvas.append(box);
+  });
+}
+
 
 function resetArtworkLayers() {
   window.clearTimeout(slideAnimTimer);
@@ -592,19 +767,86 @@ function resetArtworkLayers() {
   if (ghost) {
     ghost.style.transition = "none";
     ghost.style.transform = "";
+    ghost.style.opacity = "";
     ghost.style.visibility = "hidden";
   }
   elements.artwork.style.transition = "none";
   elements.artwork.style.transform = "";
+  elements.artwork.style.opacity = "";
+  if (elements.slideCanvas) elements.slideCanvas.style.opacity = "";
   void elements.artwork.offsetWidth;
   elements.artwork.style.transition = "";
   elements.artwork.style.transform = "";
+  elements.artwork.style.opacity = "";
+}
+
+/* Composite pages (background + media boxes) can't ride the translateY turn:
+   sliding a decoding <video> layer stutters, so they cross-fade instead. */
+function crossfadeArtwork(slide) {
+  const ghost = elements.artworkGhost;
+  const previousSrc = elements.artwork.currentSrc || elements.artwork.src;
+  resetArtworkLayers();
+  renderOverlays(slide);
+  if (!ghost || !previousSrc) {
+    placeArtwork(slide);
+    return;
+  }
+  const token = slideAnimToken;
+  ghost.src = previousSrc;
+  ghost.alt = "";
+  ghost.style.visibility = "visible";
+  ghost.style.transition = "none";
+  ghost.style.opacity = "1";
+  elements.artwork.style.transition = "none";
+  elements.artwork.style.opacity = "0";
+  if (elements.slideCanvas) elements.slideCanvas.style.opacity = "0";
+  elements.loader.classList.add("is-active");
+  elements.artwork.onload = null;
+  elements.artwork.onerror = null;
+  elements.artwork.src = slideSource(slide);
+  elements.artwork.alt = slide.alt || "";
+  const settle = () => {
+    if (token !== slideAnimToken) return;
+    elements.artwork.onload = null;
+    elements.artwork.onerror = null;
+    elements.artwork.style.transition = "opacity 320ms ease";
+    ghost.style.transition = "opacity 320ms ease";
+    if (elements.slideCanvas) elements.slideCanvas.style.transition = "opacity 320ms ease";
+    void elements.artwork.offsetWidth;
+    elements.artwork.style.opacity = "1";
+    ghost.style.opacity = "0";
+    if (elements.slideCanvas) elements.slideCanvas.style.opacity = "1";
+    elements.loader.classList.remove("is-active");
+    window.setTimeout(() => {
+      if (token !== slideAnimToken) return;
+      ghost.style.visibility = "hidden";
+      ghost.style.transition = "none";
+      ghost.style.opacity = "";
+      elements.artwork.style.transition = "";
+      elements.artwork.style.opacity = "";
+      if (elements.slideCanvas) {
+        elements.slideCanvas.style.transition = "";
+        elements.slideCanvas.style.opacity = "";
+      }
+      markArtworkReady();
+    }, 340);
+  };
+  if (elements.artwork.complete && elements.artwork.naturalWidth) settle();
+  else {
+    elements.artwork.onload = settle;
+    elements.artwork.onerror = settle;
+  }
 }
 
 /* Page turn: the outgoing page slides out while the next one slides in from
    the opposite edge (the damped vertical motion used by motion-led sites). */
 function moveArtwork(slide, direction) {
   const ghost = elements.artworkGhost;
+  const leavingComposite = elements.slideCanvas && !elements.slideCanvas.hidden;
+  if (leavingComposite || slideHasVideo(slide)) {
+    crossfadeArtwork(slide);
+    return;
+  }
   if (!ghost || slideMotionQuery.matches) {
     resetArtworkLayers();
     placeArtwork(slide);
@@ -694,8 +936,10 @@ function showSlide(index, scrollThumbnail = true) {
 
   [-1, 1].forEach((offset) => {
     const preloadIndex = (state.slideIndex + offset + project.slides.length) % project.slides.length;
+    const nextSource = slideSource(project.slides[preloadIndex]);
+    if (!nextSource) return;
     const preload = new Image();
-    preload.src = project.slides[preloadIndex].src;
+    preload.src = nextSource;
   });
 }
 
@@ -717,6 +961,7 @@ function setActiveScreen(screenName) {
   if (screenName !== "viewer") {
     clearViewerEntry();
     clearFullscreenMorph();
+    resetMediaBoxes();
   }
   if (screenName !== "viewer" && isViewerFullscreen()) {
     if (document.fullscreenElement) document.exitFullscreen().catch(() => {});
@@ -943,7 +1188,7 @@ function startViewerEntry(card, project, options = {}) {
   clearViewerEntry();
   const image = card.querySelector("img");
   const coverSource = image?.currentSrc || image?.src;
-  const pageSource = project?.slides?.[0]?.src;
+  const pageSource = project?.slides?.[0] ? slideSource(project.slides[0]) : "";
   const start = card.getBoundingClientRect();
   const overlay = document.createElement("div");
   overlay.className = "viewer-entry";

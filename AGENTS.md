@@ -22,6 +22,9 @@
 | `assets/marks/` | 三家公司图标 `bytedance / jd / kingsoft.webp`（180–183px，RGBA 透明圆角；`douyin.webp` 保留但已不再引用） |
 | `assets/thumbs/` | 卡片封面 `douyin / jd / mobile`（当前 1200×675 JPG） |
 | `assets/slide-thumbs/` | 查看器缩略图（16:9，320×180，douyin/jd/kingsoft 编号） |
+| `assets/video/` | 复合页演示视频（1080p H.264，≤12 MB/条）与 `-poster.jpg` 静帧 |
+| `assets/demo/` | 复合页 demo 的 PPT 背景图（占位；正式页面由 `.qa/media/compose.html` 产出） |
+| `assets/layers/` | 复合页的 PNG 图层素材（透明 PNG，按清单里的百分比定位） |
 | `唐尉保作品集1_files/` `唐尉保作品集2_files/` | 作品大图（4K PNG，按 script.js 里的命名规则拼路径，**不要随意改名**） |
 
 ## 3. 设计规范
@@ -122,6 +125,20 @@
 - `prefers-reduced-motion: reduce`：关闭位移/缩放/克隆层动画，保留瞬时切换。
 - 验收：8 个基准视口 + 旋转；无 JS 报错、无横向溢出、无残留克隆层/类名；关键交接用 screencast 逐帧对比像素 diff。
 
+### 3.8 复合页（PPT 背景图 + 视频框）
+
+- **形态**：一页 = 一张 PPT 导出的 16:9 背景图 + 叠在背景上的 1..n 个视频框；视频与这一页绑定，翻页时整页一起走。
+- **数据**：`{ type: "composite", background, thumb, alt, overlays: [{ kind: "video", id, label, src, poster, box: { x, y, w, h }, fit, radius, muted, loop, controls, play }] }`；无 `type` 视为普通图片页，老数据零迁移。
+- **定位**：`box` 用百分比（相对整页），`radius`/`shadow` 用「页宽的百分比」——`sizeArtworkFrame()` 把页宽写入 `--frame-unit`，CSS 用 `calc(var(--frame-unit) * var(--media-radius))`。实测 6 个视口 x/y/w/h 与清单完全一致、圆角随页宽 2.7→4.1px 等比缩放。
+- **播放**：默认**点击播放**——未播放只有 poster + 居中 ▶，`<video>` 连 `src` 都没有（零流量）；点击才注入 `src`，显示原生控件、默认静音；**同一页只播一个**（点新的先暂停旧的且不回弹 ▶，用原生控件继续）；播完 ▶ 重新出现用于重播。
+- **翻页与进出场**：复合页不参与 640ms `translateY` 翻页（视频位移会掉帧），改用 320ms 交叉淡入；卡片→大图 / 大图→卡片的 FLIP 克隆层只用「背景 + poster」，**不移动 `<video>`**。
+- **清理**：离开页面 / 退出预览时销毁 `<video>`（`pause()` + 移除 `src` + `load()`）；实测翻走后 `<video>` 元素 0 个、`[data-slide-canvas]` 隐藏。
+- **缩略图**：背景图 + 蓝色 `▶` 角标（多个视频显示数量），`aria-label` 追加「（含视频）」。
+- **产出方式**：本地放置编辑器 `.qa/media/compose.html`（工作区辅助文件，不提交）拖入背景图与视频 → 拖动/缩放框 → 自动截 poster → 导出 slide 对象粘进 `script.js`；视频先转 1080p H.264（≤12 MB/条）。
+- **改写视频源**：`overlays[].src` 支持相对路径或绝对 URL，换托管只改前缀，其他代码不动。
+- **PNG 图层**：`overlays[].kind: "image"` 渲染为绝对定位 `<img>`，用同一套百分比体系；支持 `z`（层级）、`opacity`、`fit`（默认 `contain`，保留透明边距）、`radius`；图层 `pointer-events: none`，不会挡住压在它下面的视频按钮。
+- **分层 PPT 的两种对齐方式**：① **整页分层导出**（PPT 里每一层单独导出成一张全画布 PNG，含透明）→ 每层 `0 / 0 / 100 / 100` 按顺序叠放即自动对齐；② **裁切导出**（PNG 只含元素本身）→ 用 `.qa/media/compose.html` 拖动定位，或把 `.pptx` 交给 `.qa/media/pptx2layers.py`，从 `slideN.xml` 的 `a:off / a:ext` 读取精确坐标（EMU → 百分比，支持组合与嵌套），再用 `--out --copy` 把媒体导出。实测构造样本：两张独立图 10/10/20/20、50/50/25/25，组合内图片 10/10/20/20，全部精确命中。
+
 ## 4. 工作流规则（每次改动必须执行）
 
 1. 启动本地预览（8099），在基准视口逐一看：1920×1080、1440×900、1280×800、1024×768、768×1024、390×844、320×568、844×390。
@@ -138,6 +155,13 @@
 - 有 11 个历史遗留、已无引用的 CSS 类（`card-enter`、`company-row`、`experience-card`、`experience-media`、`experience-projects`、`experience-timeline`、`project-caption`、`role-meta`、`timeline-line`、`timeline-shell` 等）可清理。
 - DIN Alternate 仅 macOS 系统自带，Windows/Android 会回退 Helvetica/Arial；若要求跨设备完全一致，需要打包 webfont（注意授权）。
 - 项目导航页左侧公司信息顺序仍是「图标 → 时间 → 公司」，首页是「时间 → 图标 → 公司」；如需统一可再调。
+- 复合页视频托管未定：demo 视频 `assets/video/demo-1080p.mp4`（8.4 MB）目前在仓库里；正式上线前决定「留仓库 / 迁 Cloudflare R2 / 迁 OSS / GitHub Releases 直链」。
+- 复合页只实现了 `play: "click"`；`enter`（进入即播）/ `hover`（悬停预览）两档数据字段已留，渲染逻辑未实现。
+- 复合页第 2 页已换成真实 PPT 页（`assets/demo/ai-reading-01.jpg`，亲声伴读 · iOS 端 AI 开发实践）：视频框按背景空框量得 `x 41.02 / y 33.01 / w 52.45 / h 54.35`、`radius 1`；**视频源仍是 demo 占位**（`assets/video/demo-1080p.mp4`），真实视频到手后替换 `readingSlide.overlays[0].src` 与 `poster` 两行即可。
+- 该真实页面目前挂在「抖音创作服务平台」项目第 2 页；归属（是否单独新建一段「个人项目 / 亲声伴读」经历）待确认。
+- `assets/demo/ppt-demo.png` + `assets/slide-thumbs/demo-01.jpg` 保留为 `.qa/media/compose.html` 的默认测试素材，不在站点里引用。
+- 占位项目（抖音分成 / 抖音精选 / 黄金眼 / 小米邮箱 / WPS Office）已从数据里移除；`disabled` 兜底与未知项目回退逻辑保留，`#project/douyin/douyin-revenue` 现在回退到该项目导航页。
+- PNG 图层已在代码与编辑器里跑通，但**还没接过真实的分层 PPT**；真实 `.pptx` 到手后先用 `.qa/media/pptx2layers.py` 对一遍坐标再入库。
 
 ## 6. 变更记录
 
@@ -340,3 +364,28 @@
 - 首页经历 `role` 由「平台产品设计专家」改为「平台产品设计师」；首页右上个人信息与联系名片的「字节跳动产品设计专家」同步改为「字节跳动产品设计师」。
 - 经历负责信息去掉团队人数后缀：「创作平台设计负责人 · 5人团队」→「创作平台设计负责人」，「数坊项目设计负责人 · 3人团队」→「数坊项目设计负责人」。
 - 验证：1440×900 / 390×844 截图检查文案与换行正常、信息块布局不变；无 JS 报错。
+
+### 2026-11-11 · 复合页第一版：PPT 背景图 + 多个视频框
+
+- **能力**：新增 `type: "composite"` 页面——一张 PPT 背景图 + 多个百分比定位的视频框；`script.js` 新增 `isComposite / slideSource / slideThumb / slideVideoCount` 工具函数，查看器、缩略图、相邻页预加载、进入/退出克隆层全部兼容（无 `type` 的旧数据按图片页处理）。
+- **实现**：`index.html` 的 `.artwork-frame` 内新增 `[data-slide-canvas]` 覆盖层；`placeArtwork / renderOverlays / startVideo / resetMediaBoxes` 负责渲染与播放；`sizeArtworkFrame()` 额外写入 `--frame-unit`（页宽 1%），媒体框圆角/阴影按比例缩放；缩略图带 `▶N` 角标。
+- **播放**：未播放只有 poster + 居中 ▶、`<video>` 无 `src`（零流量）；点击才加载，默认静音 + 原生控件；同页只播一个（点新的暂停旧的）；播完 ▶ 重现用于重播。
+- **动效**：复合页不参与 640ms `translateY` 翻页，改 320ms 交叉淡入（`crossfadeArtwork`）；进出预览的克隆层只用「背景 + poster」，不移动 `<video>`；离开页面销毁 `<video>` 释放解码器。
+- **demo**：抖音项目第 2 页插入复合 demo（`assets/demo/ppt-demo.png` + 3 个视频框，复用 `assets/video/demo-1080p.mp4`）；样片 `IMG_6245-1.MOV`（4K HEVC 287 MB / 45 s / 53 Mbps）→ 1080p H.264 CRF26 = **8.4 MB**（-97%），poster 73 KB。
+- **工具（`.qa/`，不提交）**：`media/compose.html` 放置编辑器（拖背景 + 拖视频、拖动/缩放框、锁比例、自动截 poster、导出 slide JSON）；`media/test-composite.mjs` / `test-turn.mjs` / `test-editor.mjs` 回归；`serve.mjs` 补 Range/206 与 mp4 MIME、修复相对 `ROOT` 路径导致的 403。
+- **验证**：1920×1080 / 1440×900 / 768×1024 / 390×844 / 844×390 / 320×568 六视口——视频框位置与清单完全一致（x/y/w/h 4/26/52/52 等）、圆角随页宽 2.7→4.1px；点击播放后 `currentTime` 前进、`videoWidth/Height` 1920×1080、静音、控件可见；同页切换视频旧视频暂停；Esc 退出后 `<video>` 0 个；翻页离开复合页 canvas 隐藏、无残留；`run-qa` / `verify-fixes` / `measure-home-layout` / `measure-projects` 全绿（无 JS 报错、无失败请求、卡片不裁切）。
+
+### 2026-11-11 · 复合页接入真实 PPT 页面（亲声伴读）
+
+- **背景图**：`20240548.png`（3840×2160，PNG 3.3 MB）压缩为 `assets/demo/ai-reading-01.jpg`（JPEG q92，**519 KB，-84%**），并生成 320×180 缩略图 `assets/slide-thumbs/ai-reading-01.jpg`（7.5 KB）。
+- **空框定位**：用像素分析量出页面右侧圆角空框的内边界——左 1575 / 上 713 / 右 3589 / 下 1887 px → 百分比 `x 41.02 · y 33.01 · w 52.45 · h 54.35`；圆角按内框约 40 px 折算 `radius: 1`；视频用 `fit: cover`（16:9 视频在该框内横向裁切约 3.5%，肉眼不可见）。
+- **数据**：`script.js` 把原 3 框 demo 换成单框 `readingSlide`（`type: "composite"`）；视频源先用 `assets/video/demo-1080p.mp4` **占位**，真实视频到位后只改 `overlays[0].src` / `poster` 两行。
+- **验证**：1440×900 / 1920×1080 / 390×844 / 844×390 四视口——视频框渲染百分比与清单完全一致（41.02/33.01/52.45/54.35）、圆角随页宽 12.3→3.7 px；点击播放 `currentTime` 前进、1920×1080、静音；无 JS 报错、无失败请求。
+
+### 2026-11-11 · 复合页支持 PNG 图层 + 移除占位项目
+
+- **PNG 图层**：`overlays[].kind: "image"` 渲染为绝对定位 `<img>`，复用同一套百分比定位；新增 `z`（层级）、`opacity`、`fit`（默认 `contain`，保留透明边距）；图层 `pointer-events: none`，不挡下层视频的 ▶。
+- **放置编辑器**：`.qa/media/compose.html` 新增「加 PNG 图层」、图层类型标识（绿框 + `PNG ·` 标签）、不透明度、上移/下移一层；导出 JSON 支持 image / video 混排，按列表顺序即叠放顺序。
+- **PPT 分层坐标换算**：新增 `.qa/media/pptx2layers.py` —— 读 `.pptx` 的 `sldSz` 与每页图片的 `a:off / a:ext`，EMU 换算成百分比，支持组合（`grpSp` 的 `chOff/chExt`）与嵌套；`--out --copy` 可把媒体文件导出。用构造的双图 + 组内图测试文件验证：独立图片 10/10/20/20 与 50/50/25/25、组合内图片 10/10/20/20 全部精确命中。
+- **移除占位项目**：删除抖音分成、抖音精选、黄金眼、小米邮箱、WPS Office 五个 `disabled` 项目，`projectNames` 同步收敛；首页作品流从 8 张卡变为 3 张真实项目卡，项目导航每段经历只剩 1 张真实封面；`disabled` 兜底与未知项目回退逻辑保留（`#project/douyin/douyin-revenue` 现回退到该项目导航页）。
+- **验证**：`run-qa`（3 视口 `home issues: none`、项目页 1 卡 0 disabled、无失败请求）、`verify-fixes`（禁用/坏路由、返回、焦点全部正常）、`measure-home-layout`（`cardClipped` 全 false）、`measure-projects`（`cardClipped` 0）；PNG 图层注入测试：`z-index` 5、`opacity` 0.85、`pointer-events` none、下层视频仍在；编辑器 PNG 图层导出 `kind/image/opacity/fit` 正确；无 JS 报错、无失败请求。
