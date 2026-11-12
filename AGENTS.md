@@ -20,7 +20,7 @@
 | `script.js` | 数据、hash 路由、横向工作流（阻尼/拖拽）、查看器、缩略图、联系名片、焦点管理 |
 | `assets/fonts/` | Caveat / Kalam woff2（手写体强调） |
 | `assets/marks/` | 三家公司图标 `bytedance / jd / kingsoft.webp`（180–183px，RGBA 透明圆角；`douyin.webp` 保留但已不再引用） |
-| `assets/thumbs/` | 卡片封面：字节跳动四个项目使用 `2026 作品材料/作品封面` 提供的四张设计稿，压缩后为 `douyin-platform / douyin-ai-cover / douyin-other / douyin-ai-practice.jpg`（1600×900 JPEG）；JD（`jd.jpg`）与金山词霸（`mobile.jpg`）沿用原封面 |
+| `assets/thumbs/` | 卡片封面：字节跳动四个项目 + 金山词霸使用 `2026 作品材料/作品封面` 的设计稿，压缩后为 `douyin-platform / douyin-ai-cover / douyin-other / douyin-ai-practice / mobile.jpg`（1600×900 JPEG）；JD 沿用 `jd.jpg` 原封面 |
 | `assets/slide-thumbs/` | 查看器缩略图（16:9，320×180；`byte-*` 为字节跳动四个项目、`jd/kingsoft` 为历史项目） |
 | `assets/works/bytedance/` | 2026 作品材料导入的字节跳动四个项目：`platform`（35 页）、`ai-cover`（9 页）、`other`（4 页）、`ai-practice`（5 页图片 + 1 页复合视频），统一 2560×1440 JPEG |
 | `assets/video/` | 复合页演示视频（1080p H.264，≤12 MB/条）与 `-poster.jpg` 静帧 |
@@ -44,7 +44,7 @@
 ### 3.2 卡片封面（首页小卡 + 项目页大卡共用一张）
 
 - 字节跳动四个项目使用独立封面图：`assets/thumbs/douyin-*.jpg`（来源 `2026 作品材料/作品封面` 的四张 3840×2160 设计稿，统一压成 1600×900 JPEG）；封面不跟随第 1 页变化。
-- JD 与金山词霸沿用各自历史封面（`jd.jpg` / `mobile.jpg`，本身即设计稿）。
+- JD 沿用原封面 `jd.jpg`；金山词霸使用 `2026 作品材料/作品封面/金山办公.png` 压缩的 `mobile.jpg`（1600×900）。
 - 卡片呈现与京东零售封面一致：`object-fit: cover` 居中裁切；首页卡与项目页卡比例差异较大（0.25–1.43），保证封面中心内容落在裁切安全区。
 - 换封面时替换对应 `assets/thumbs/*.jpg` 即可；作品内页顺序与封面相互独立。
 - **卡片文字层**：顶部是项目名（Impact）+ 页数/类型（`32 PAGES · EXPLORE` 或「项目资料整理中」），底部是序号 `01` + 类型（`PLATFORM · WEB`）；遮罩为「顶部强渐变 + 底部弱渐变」两层，hover 时整层透明度 .76 → .38；`PENDING` 角标位于项目名块下方 52px。
@@ -175,7 +175,7 @@
 - 第一段经历的展示品牌为「字节跳动」，但历史路由 ID `douyin` 保持不变，避免破坏已有链接。
 - 字节跳动经历当前包含「抖音创作服务平台」「抖音AI封面」「抖音其他项目」「个人AI转型实践」四个真实项目；京东零售与金山办公各保留一个真实项目。已移除的占位项目不再展示，但禁用项目和坏路由的兜底逻辑继续保留。
 - 「抖音其他项目」当前第一页为原第 3 页（创作者分成项目），后续依次为原第 1、2、4 页。
-- 字节跳动四个项目使用独立封面图（`assets/thumbs/douyin-*.jpg`，来自 `2026 作品材料/作品封面`）；JD 与金山词霸沿用各自原有封面。封面与作品第 1 页可以不同，首页与项目页共用同一封面。
+- 字节跳动四个项目与金山词霸使用独立封面图（`assets/thumbs/douyin-*.jpg` / `mobile.jpg`，来自 `2026 作品材料/作品封面`）；JD 沿用原有封面。封面与作品第 1 页可以不同，首页与项目页共用同一封面。
 
 ### 6.2 视觉与响应式基线
 
