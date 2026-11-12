@@ -1060,7 +1060,7 @@ function renderOverlays(slide) {
     button.className = "media-play";
     button.type = "button";
     button.setAttribute("aria-label", `播放视频：${overlay.label || "页面演示"}`);
-    button.innerHTML = '<span class="media-play-icon" aria-hidden="true"><svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M9 6.4 18.2 12 9 17.6z"></path></svg></span>';
+    button.innerHTML = '<span class="media-play-icon" aria-hidden="true"><svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M9.1 7.2C7.8 6.4 6.5 7.2 6.5 8.8v6.4c0 1.6 1.3 2.4 2.6 1.6l8-3.8c1.3-.7 1.3-2.5 0-3.2z" fill="currentColor"></path></svg></span>';
     button.addEventListener("click", () => startVideo(box, overlay, button));
     box.append(button);
     if (overlay.soundHint) {
