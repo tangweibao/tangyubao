@@ -174,24 +174,37 @@ const platformSlide = (number, displayNumber) => {
   };
 };
 
-// Pages 13-16 are one scroll-stacked page: 13 is the base, then 14/15/16
-// slide up over it as the visitor keeps scrolling. Subsequent pages shift up.
-const platformStackLayers = [13, 14, 15, 16].map((number) => platformSlide(number, number));
-const platformStackSlide = {
-  type: "stack",
-  src: platformStackLayers[0].src,
-  variants: platformStackLayers[0].variants,
-  thumb: platformStackLayers[0].thumb,
-  alt: "抖音创作服务平台案例第 13 页（13–16 页滚动叠加）",
-  layers: platformStackLayers
+// Several source pages are states of the same design: 7/8 (base -> click
+// heatmap), 13-16 (four-step overview) and 25/26 (competitor comparison).
+// Each group collapses into one viewer page whose layers cross-fade in place
+// as the visitor scrolls; the rail thumbnail shows the settled/final layer.
+const platformStack = (numbers, displayNumber, note) => {
+  const layers = numbers.map((number) => platformSlide(number, displayNumber));
+  return {
+    type: "stack",
+    src: layers[0].src,
+    variants: layers[0].variants,
+    thumb: layers[layers.length - 1].thumb,
+    alt: `抖音创作服务平台案例第 ${displayNumber} 页（${note}）`,
+    layers
+  };
 };
+const platformPage = (number) => platformSlide(number, bytedancePlatformSlides.length + 1);
 const bytedancePlatformSlides = [];
-for (let number = 1; number <= 12; number += 1) {
-  bytedancePlatformSlides.push(platformSlide(number, bytedancePlatformSlides.length + 1));
+for (let number = 1; number <= 6; number += 1) {
+  bytedancePlatformSlides.push(platformPage(number));
 }
-bytedancePlatformSlides.push(platformStackSlide);
-for (let number = 17; number <= 35; number += 1) {
-  bytedancePlatformSlides.push(platformSlide(number, bytedancePlatformSlides.length + 1));
+bytedancePlatformSlides.push(platformStack([7, 8], bytedancePlatformSlides.length + 1, "7–8 页渐隐叠加"));
+for (let number = 9; number <= 12; number += 1) {
+  bytedancePlatformSlides.push(platformPage(number));
+}
+bytedancePlatformSlides.push(platformStack([13, 14, 15, 16], bytedancePlatformSlides.length + 1, "13–16 页渐隐叠加"));
+for (let number = 17; number <= 24; number += 1) {
+  bytedancePlatformSlides.push(platformPage(number));
+}
+bytedancePlatformSlides.push(platformStack([25, 26], bytedancePlatformSlides.length + 1, "25–26 页渐隐叠加"));
+for (let number = 27; number <= 35; number += 1) {
+  bytedancePlatformSlides.push(platformPage(number));
 }
 const bytedanceAiCoverSlides = buildWorksSlides("ai-cover", 9, "byte-ai-cover", "抖音 AI 封面案例");
 // 抖音其他项目：新增一张首图（00），随后接原第 3 页与原第 1、2、4 页。
@@ -878,7 +891,9 @@ function markArtworkReady() {
 }
 
 function setArtworkPlaceholder(slide) {
-  const thumb = slideThumb(slide);
+  // Stack pages use the last layer as their rail thumb; the backdrop must
+  // still match the layer actually on screen (the base layer on entry).
+  const thumb = slideThumb(activeVisualSlide(slide));
   elements.artworkFrame.style.backgroundImage = thumb ? `url("${thumb}")` : "";
   // Inline these too: the later .artwork-frame shorthand resets them, and a
   // repeating 320×180 thumbnail looked like a wall of many images on refresh.
@@ -1203,71 +1218,43 @@ function animateStackStep(slide, nextIndex, direction) {
   elements.artwork.onload = null;
   elements.artwork.onerror = null;
   elements.artwork.classList.remove("is-loading");
-  if (!ghost) {
+  if (!ghost || slideMotionQuery.matches) {
     placeArtwork(targetLayer);
     return;
   }
-  const easing = "cubic-bezier(.76, 0, .24, 1)";
-  const duration = 560;
-  if (direction > 0) {
-    // the next panel rises from the bottom and covers the current layer
-    ghost.style.transition = "none";
-    ghost.style.visibility = "visible";
-    ghost.style.opacity = "";
-    ghost.style.transform = "translateY(100%)";
-    ghost.src = targetSrc;
-    ghost.alt = "";
-    whenImageDecoded(ghost, () => {
+  const easing = "cubic-bezier(.4, 0, .2, 1)";
+  const duration = 480;
+  // Layers cross-fade in place: the layer being left stays on top (ghost) and
+  // dissolves out while the target layer is already decoded underneath, so
+  // nothing moves on screen and no blank frame can appear between layers.
+  const fromSrc = elements.artwork.currentSrc || elements.artwork.src;
+  ghost.style.transition = "none";
+  ghost.style.visibility = "visible";
+  ghost.style.opacity = "1";
+  ghost.style.transform = "translateY(0)";
+  ghost.src = fromSrc;
+  ghost.alt = "";
+  elements.artwork.style.transition = "none";
+  elements.artwork.style.transform = "";
+  elements.artwork.src = targetSrc;
+  elements.artwork.alt = targetLayer.alt || "";
+  whenImageDecoded(elements.artwork, () => {
+    if (token !== slideAnimToken) return;
+    ghost.style.transition = `opacity ${duration}ms ${easing}`;
+    window.requestAnimationFrame(() => {
       if (token !== slideAnimToken) return;
-      ghost.style.transition = `transform ${duration}ms ${easing}`;
-      window.requestAnimationFrame(() => {
-        if (token !== slideAnimToken) return;
-        ghost.style.transform = "translateY(0)";
-      });
-      slideAnimTimer = window.setTimeout(() => {
-        if (token !== slideAnimToken) return;
-        elements.artwork.src = targetSrc;
-        elements.artwork.alt = targetLayer.alt || "";
-        elements.artwork.style.transition = "";
-        elements.artwork.style.transform = "";
-        window.requestAnimationFrame(() => {
-          ghost.style.visibility = "hidden";
-          ghost.style.transition = "none";
-          ghost.style.transform = "";
-          markArtworkReady();
-        });
-      }, duration + 40);
+      ghost.style.opacity = "0";
     });
-  } else {
-    // the current top layer slides down, revealing the previous layer
-    const currentSrc = elements.artwork.currentSrc || elements.artwork.src;
-    ghost.style.transition = "none";
-    ghost.style.visibility = "visible";
-    ghost.style.opacity = "";
-    ghost.style.transform = "translateY(0)";
-    ghost.src = currentSrc;
-    ghost.alt = "";
-    elements.artwork.style.transition = "none";
-    elements.artwork.src = targetSrc;
-    elements.artwork.alt = targetLayer.alt || "";
-    elements.artwork.style.transform = "";
-    whenImageDecoded(elements.artwork, () => {
+    slideAnimTimer = window.setTimeout(() => {
       if (token !== slideAnimToken) return;
-      ghost.style.transition = `transform ${duration}ms ${easing}`;
-      window.requestAnimationFrame(() => {
-        if (token !== slideAnimToken) return;
-        ghost.style.transform = "translateY(100%)";
-      });
-      slideAnimTimer = window.setTimeout(() => {
-        if (token !== slideAnimToken) return;
-        elements.artwork.style.transition = "";
-        ghost.style.visibility = "hidden";
-        ghost.style.transition = "none";
-        ghost.style.transform = "";
-        markArtworkReady();
-      }, duration + 40);
-    });
-  }
+      elements.artwork.style.transition = "";
+      ghost.style.visibility = "hidden";
+      ghost.style.transition = "none";
+      ghost.style.opacity = "";
+      ghost.style.transform = "";
+      markArtworkReady();
+    }, duration + 40);
+  });
 }
 
 function stepStack(direction) {
