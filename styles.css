@@ -369,7 +369,7 @@ body[data-screen="viewer"] .site-header { grid-template-columns: auto minmax(0, 
 }
 .media-play-icon svg {
   width: 48%; height: 48%;
-  margin-left: -2%;
+  margin-left: 4%;
   fill: currentColor;
   overflow: visible;
 }
