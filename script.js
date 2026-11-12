@@ -194,12 +194,11 @@ const bytedancePlatformSlides = [];
 for (let number = 1; number <= 6; number += 1) {
   bytedancePlatformSlides.push(platformPage(number));
 }
-bytedancePlatformSlides.push(platformStack([7, 8], bytedancePlatformSlides.length + 1, "7–8 页渐隐叠加"));
-for (let number = 9; number <= 12; number += 1) {
-  bytedancePlatformSlides.push(platformPage(number));
-}
+bytedancePlatformSlides.push(platformStack([7, 8, 9, 10, 11], bytedancePlatformSlides.length + 1, "7–11 页渐隐叠加"));
+bytedancePlatformSlides.push(platformPage(12));
 bytedancePlatformSlides.push(platformStack([13, 14, 15, 16], bytedancePlatformSlides.length + 1, "13–16 页渐隐叠加"));
-for (let number = 17; number <= 24; number += 1) {
+bytedancePlatformSlides.push(platformStack([17, 18, 19, 20], bytedancePlatformSlides.length + 1, "17–20 页渐隐叠加"));
+for (let number = 21; number <= 24; number += 1) {
   bytedancePlatformSlides.push(platformPage(number));
 }
 bytedancePlatformSlides.push(platformStack([25, 26], bytedancePlatformSlides.length + 1, "25–26 页渐隐叠加"));
@@ -1287,7 +1286,9 @@ function showSlide(index, scrollThumbnail = true) {
   state.slideIndex = (index + project.slides.length) % project.slides.length;
   const slide = project.slides[state.slideIndex];
   if (isStack(slide)) {
-    stackProgress.set(slide, direction < 0 ? slide.layers.length - 1 : 0);
+    // Every entry into a merged page starts from its initial (base) layer,
+    // whether the visitor arrived by scrolling down or up.
+    stackProgress.set(slide, 0);
     stackStepLock = 0;
   }
   elements.currentCount.textContent = pad(state.slideIndex + 1);
