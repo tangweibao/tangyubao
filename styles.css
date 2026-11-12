@@ -242,6 +242,7 @@ body[data-screen="viewer"] .site-header { grid-template-columns: auto minmax(0, 
 
 .viewer-stage { position: relative; grid-column: 1; grid-row: 1; min-height: 0; display: grid; grid-template-columns: minmax(0, 1fr); place-items: center; overflow: hidden; padding: 18px clamp(16px, 2.2vw, 34px); }
 .artwork-frame { position: relative; width: 100%; height: 100%; min-width: 0; min-height: 0; overflow: hidden; border-radius: 5px; background: #151b22; box-shadow: 0 20px 55px rgba(0, 0, 0, .28); touch-action: none; }
+.artwork-frame { background-position: center; background-size: cover; background-repeat: no-repeat; }
 /* Fullscreen viewing */
 .artwork-stack { display: flex; flex-direction: column; align-items: center; gap: 16px; max-width: 100%; max-height: 100%; min-height: 0; transition: transform .55s cubic-bezier(.22, 1, .36, 1); }
 /* last page: the "other projects" panel slides over the stage bottom, so the

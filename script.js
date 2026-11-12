@@ -28,17 +28,81 @@ const kingsoftSlides = kingsoftPages.map((number, index) => ({
 --------------------------------------------------------------------------- */
 const isComposite = (slide) => Boolean(slide && slide.type === "composite");
 const slideSource = (slide) => (isComposite(slide) ? slide.background : slide?.src);
+// High-res originals stay untouched; the viewer loads the smallest WebP that
+// still covers the frame at the current device pixel ratio. The original is
+// the fallback for large/retina/fullscreen displays.
+const slideVariants = (src) => {
+  const base = src.replace(/\.[^.]+$/, "");
+  return [960, 1280, 1920, 2560].map((width) => ({
+    width,
+    src: `${base}.w${width}.webp`
+  }));
+};
+
+const pickSlideSource = (slide) => {
+  const base = slideSource(slide);
+  const variants = slide?.variants;
+  if (!base || !variants?.length) return base;
+  const frame = document.querySelector(".artwork-frame");
+  const cssWidth = frame?.clientWidth || Math.min(window.innerWidth * 0.82, 1920);
+  const dpr = Math.min(window.devicePixelRatio || 1, 2);
+  const target = Math.ceil((cssWidth * dpr) / 16) * 16;
+  for (const variant of variants) {
+    if (variant.width >= target) return variant.src;
+  }
+  return base;
+};
+
+// Legacy JD / Kingsoft pages also get responsive variants.
+jdSlides.forEach((slide) => { slide.variants = slideVariants(slide.src); });
+kingsoftSlides.forEach((slide) => { slide.variants = slideVariants(slide.src); });
+
+const warmedImageSources = new Set();
+function warmSlideImage(slide) {
+  const src = pickSlideSource(slide);
+  if (!src || warmedImageSources.has(src)) return;
+  warmedImageSources.add(src);
+  const image = new Image();
+  image.decoding = "async";
+  image.src = src;
+}
+
+// When the viewport, DPR or fullscreen state changes, upgrade/downgrade the
+// current image to the variant that matches the new displayed size.
+let resolutionRefreshToken = 0;
+function refreshArtworkResolution() {
+  if (state.screen !== "viewer" || !elements.viewerScreen || elements.viewerScreen.hidden) return;
+  if (elements.artwork.classList.contains("is-loading")) return;
+  const project = currentProject();
+  const slide = project?.slides?.[state.slideIndex];
+  if (!slide || isComposite(slide) || !slide.variants?.length) return;
+  const wanted = pickSlideSource(slide);
+  const current = elements.artwork.getAttribute("src") || "";
+  if (!wanted || wanted === current) return;
+  const token = ++resolutionRefreshToken;
+  const preload = new Image();
+  preload.decoding = "async";
+  preload.onload = () => {
+    if (token !== resolutionRefreshToken || state.screen !== "viewer") return;
+    const active = currentProject()?.slides?.[state.slideIndex];
+    if (active !== slide || pickSlideSource(active) !== wanted) return;
+    if (elements.artwork.getAttribute("src") === wanted) return;
+    elements.artwork.src = wanted;
+  };
+  preload.src = wanted;
+}
 const slideThumb = (slide) => slide?.thumb || slideSource(slide);
 const slideVideoCount = (slide) =>
   isComposite(slide) ? (slide.overlays || []).filter((overlay) => overlay.kind === "video").length : 0;
 const slideHasVideo = (slide) => slideVideoCount(slide) > 0;
 
-/* 真实 PPT 页：亲声伴读 · iOS 端 AI 开发实践（第 5 页）。
+/* 真实 PPT 页：亲声伴读 · iOS 端 AI 开发实践（第 6 页）。
    背景图已按空框位置量好（x/y/w/h 为相对整页的百分比），
    视频源先用 demo 片段占位——真实视频转码后只替换 src / poster 两行即可。 */
 const readingSlide = {
   type: "composite",
   background: "assets/demo/ai-reading-01.png",
+  variants: slideVariants("assets/demo/ai-reading-01.png"),
   thumb: "assets/slide-thumbs/ai-reading-01.jpg",
   alt: "亲声伴读：iOS 端 AI 开发实践（PPT 背景图 + 演示视频）",
   overlays: [
@@ -59,13 +123,15 @@ const readingSlide = {
 };
 
 /* ByteDance works imported from 2026 作品材料 (4 folders):
-   converted to 2560×1440 JPEG slides + 320×180 rail thumbs + 1200×2000 covers. */
+   original-resolution PNG slides + responsive WebP variants + 320×180 rail thumbs. */
 const bytedanceWorks = "assets/works/bytedance";
 const buildWorksSlides = (folder, count, thumbPrefix, label) =>
   Array.from({ length: count }, (_, index) => {
     const number = pad(index + 1);
+    const src = `${bytedanceWorks}/${folder}/${number}.png`;
     return {
-      src: `${bytedanceWorks}/${folder}/${number}.png`,
+      src,
+      variants: slideVariants(src),
       thumb: `assets/slide-thumbs/${thumbPrefix}-${number}.jpg`,
       alt: `${label}第 ${index + 1} 页`
     };
@@ -75,11 +141,15 @@ const bytedancePlatformSlides = buildWorksSlides("platform", 35, "byte-platform"
 const bytedanceAiCoverSlides = buildWorksSlides("ai-cover", 9, "byte-ai-cover", "抖音 AI 封面案例");
 // 抖音其他项目：新增一张首图（00），随后接原第 3 页与原第 1、2、4 页。
 const bytedanceOtherOrder = [0, 3, 1, 2, 4];
-const bytedanceOtherSlides = bytedanceOtherOrder.map((fileNumber, index) => ({
-  src: `${bytedanceWorks}/other/${pad(fileNumber)}.png`,
-  thumb: `assets/slide-thumbs/byte-other-${pad(fileNumber)}.jpg`,
-  alt: `抖音其他项目案例第 ${index + 1} 页`
-}));
+const bytedanceOtherSlides = bytedanceOtherOrder.map((fileNumber, index) => {
+  const src = `${bytedanceWorks}/other/${pad(fileNumber)}.png`;
+  return {
+    src,
+    variants: slideVariants(src),
+    thumb: `assets/slide-thumbs/byte-other-${pad(fileNumber)}.jpg`,
+    alt: `抖音其他项目案例第 ${index + 1} 页`
+  };
+});
 const bytedanceAiPracticeSlides = [
   ...buildWorksSlides("ai-practice", 5, "byte-ai-practice", "个人 AI 转型实践"),
   readingSlide
@@ -312,6 +382,7 @@ function syncFullscreenUI() {
     sizeArtworkFrame();
     updateRailMask();
   });
+  window.setTimeout(refreshArtworkResolution, 80);
 }
 
 function clearFullscreenMorph() {
@@ -658,15 +729,23 @@ let slideAnimTimer = 0;
 function markArtworkReady() {
   elements.artwork.classList.remove("is-loading");
   elements.loader.classList.remove("is-active");
+  elements.artworkFrame.style.backgroundImage = "";
   sizeArtworkFrame();
+  window.setTimeout(refreshArtworkResolution, 60);
+}
+
+function setArtworkPlaceholder(slide) {
+  const thumb = slideThumb(slide);
+  elements.artworkFrame.style.backgroundImage = thumb ? `url("${thumb}")` : "";
 }
 
 function placeArtwork(slide) {
   elements.artwork.classList.add("is-loading");
   elements.loader.classList.add("is-active");
+  setArtworkPlaceholder(slide);
   elements.artwork.onload = markArtworkReady;
   elements.artwork.onerror = markArtworkReady;
-  elements.artwork.src = slideSource(slide);
+  elements.artwork.src = pickSlideSource(slide);
   elements.artwork.alt = slide.alt || "";
   renderOverlays(slide);
   if (elements.artwork.complete) markArtworkReady();
@@ -843,9 +922,10 @@ function crossfadeArtwork(slide) {
   elements.artwork.style.opacity = "0";
   if (elements.slideCanvas) elements.slideCanvas.style.opacity = "0";
   elements.loader.classList.add("is-active");
+  setArtworkPlaceholder(slide);
   elements.artwork.onload = null;
   elements.artwork.onerror = null;
-  elements.artwork.src = slideSource(slide);
+  elements.artwork.src = pickSlideSource(slide);
   elements.artwork.alt = slide.alt || "";
   const settle = () => {
     if (token !== slideAnimToken) return;
@@ -909,11 +989,13 @@ function moveArtwork(slide, direction) {
   elements.loader.classList.add("is-active");
 
   const incoming = new Image();
+  const incomingSrc = pickSlideSource(slide);
+  setArtworkPlaceholder(slide);
   const start = () => {
     if (token !== slideAnimToken) return;
     elements.artwork.onload = null;
     elements.artwork.onerror = null;
-    elements.artwork.src = slide.src;
+    elements.artwork.src = incomingSrc;
     elements.artwork.alt = slide.alt;
     elements.artwork.style.transform = `translateY(${direction > 0 ? 100 : -100}%) scale(1.02)`;
     sizeArtworkFrame();
@@ -937,7 +1019,7 @@ function moveArtwork(slide, direction) {
       markArtworkReady();
     }, duration + 40);
   };
-  incoming.src = slide.src;
+  incoming.src = incomingSrc;
   if (incoming.complete && incoming.naturalWidth) start();
   else {
     incoming.onload = start;
@@ -978,11 +1060,9 @@ function showSlide(index, scrollThumbnail = true) {
 
   [-1, 1].forEach((offset) => {
     const preloadIndex = (state.slideIndex + offset + project.slides.length) % project.slides.length;
-    const nextSource = slideSource(project.slides[preloadIndex]);
-    if (!nextSource) return;
-    const preload = new Image();
-    preload.src = nextSource;
+    warmSlideImage(project.slides[preloadIndex]);
   });
+  warmSlideImage(project.slides[state.slideIndex]);
 }
 
 const screenHeadings = {
@@ -1230,7 +1310,7 @@ function startViewerEntry(card, project, options = {}) {
   clearViewerEntry();
   const image = card.querySelector("img");
   const coverSource = image?.currentSrc || image?.src;
-  const pageSource = project?.slides?.[0] ? slideSource(project.slides[0]) : "";
+  const pageSource = project?.slides?.[0] ? pickSlideSource(project.slides[0]) : "";
   const start = card.getBoundingClientRect();
   const overlay = document.createElement("div");
   overlay.className = "viewer-entry";
@@ -1627,6 +1707,7 @@ window.addEventListener("resize", () => {
   scheduleStreamMeasure(120);
   updateRailMask();
   sizeArtworkFrame();
+  refreshArtworkResolution();
   if (state.screen === "viewer") {
     const current = elements.thumbnailRail.querySelector(".thumbnail.is-current");
     if (current) current.scrollIntoView({ block: "center", inline: "center" });

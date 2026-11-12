@@ -22,7 +22,7 @@
 | `assets/marks/` | 三家公司图标 `bytedance / jd / kingsoft.webp`（180–183px，RGBA 透明圆角；`douyin.webp` 保留但已不再引用） |
 | `assets/thumbs/` | 卡片封面（允许压缩）：字节跳动四个项目 + 金山词霸由原始设计稿压成 `douyin-platform / douyin-ai-cover / douyin-other / douyin-ai-practice / mobile.jpg`（1600×900 JPEG q90，~170–230 KB）；JD 沿用 `jd.jpg` 原封面 |
 | `assets/slide-thumbs/` | 查看器缩略图（16:9，320×180；`byte-*` 为字节跳动四个项目、`jd/kingsoft` 为历史项目） |
-| `assets/works/bytedance/` | 2026 作品材料导入的字节跳动四个项目：`platform`（35 页）、`ai-cover`（9 页）、`other`（5 页）、`ai-practice`（5 页图片 + 1 页复合视频）；页面均为原始 3840×2160 PNG，不做缩放/有损压缩（other 首图 `00.png` 来自提供的 2730×1536 原图） |
+| `assets/works/bytedance/` | 2026 作品材料导入的字节跳动四个项目：`platform`（35 页）、`ai-cover`（9 页）、`other`（5 页）、`ai-practice`（5 页图片 + 1 页复合视频）；原图均为原始 3840×2160 PNG，不做缩放/有损压缩；每页旁边有 `.w960/.w1280/.w1920/.w2560.webp` 响应式变体（q95），查看器按屏幕实际需要加载 |
 | `assets/video/` | 复合页演示视频（1080p H.264，≤12 MB/条）与 `-poster.jpg` 静帧 |
 | `assets/demo/` | 复合页 demo 的 PPT 背景图（占位；正式页面由 `.qa/media/compose.html` 产出） |
 | `assets/layers/` | 复合页的 PNG 图层素材（透明 PNG，按清单里的百分比定位） |
@@ -142,6 +142,16 @@
 - **PNG 图层**：`overlays[].kind: "image"` 渲染为绝对定位 `<img>`，用同一套百分比体系；支持 `z`（层级）、`opacity`、`fit`（默认 `contain`，保留透明边距）、`radius`；图层 `pointer-events: none`，不会挡住压在它下面的视频按钮。
 - **分层 PPT 的两种对齐方式**：① **整页分层导出**（PPT 里每一层单独导出成一张全画布 PNG，含透明）→ 每层 `0 / 0 / 100 / 100` 按顺序叠放即自动对齐；② **裁切导出**（PNG 只含元素本身）→ 用 `.qa/media/compose.html` 拖动定位，或把 `.pptx` 交给 `.qa/media/pptx2layers.py`，从 `slideN.xml` 的 `a:off / a:ext` 读取精确坐标（EMU → 百分比，支持组合与嵌套），再用 `--out --copy` 把媒体导出。实测构造样本：两张独立图 10/10/20/20、50/50/25/25，组合内图片 10/10/20/20，全部精确命中。
 
+### 3.9 高清与加载策略（响应式图片）
+
+- **原图母版不动**：`assets/works/bytedance/*` 保留原始 3840×2160 PNG（以及 JD/金山历史 4K PNG），任何优化都不覆盖母版。
+- **派生变体**：每页生成 `w960 / w1280 / w1920 / w2560` 四档 WebP（q95，视觉近无损），放在原图同目录；JD/金山页在 `唐尉保作品集2_files/` 下同样生成。
+- **运行时选择**：`pickSlideSource()` 计算「作品框 CSS 宽度 × min(devicePixelRatio, 2)」，选最小够用的变体；超过 2560 才回退原 PNG。1440@1x 约 1280w、1440@2x 约 2560w、1920@2x 或 4K 全屏使用原图。
+- **预加载**：`warmSlideImage()` 按同一规则预加载相邻页，翻页直接命中；`showSlide` 只预加载当前页 + 前后各一页。
+- **全屏/窗口变化**：`refreshArtworkResolution()` 在 resize、进入/退出全屏、图片加载完成后重新选档；尺寸变大升级、变小降级，不重复请求同一 URL。
+- **渐进占位**：加载期间用 320×180 轨道缩略图作为 `.artwork-frame` 背景（`setArtworkPlaceholder`），大图就绪后清除，避免白屏。
+- **缓存**：变体与原图同目录、同 URL 规则；替换图片时保留同名变体或重新生成，避免旧缓存。
+
 ## 4. 工作流规则（每次改动必须执行）
 
 1. 启动本地预览（8099），在基准视口逐一看：1920×1080、1440×900、1280×800、1024×768、768×1024、390×844、320×568、844×390。
@@ -154,7 +164,7 @@
 ## 5. 已知事项 / 待办
 
 - 平板竖屏（768–820 宽）时项目卡被拉成 0.25–0.38 的超窄长条，封面裁切严重 → 建议给 `.project-card` 限制最大宽高比（如不超过 1:2）。
-- 封面（`assets/thumbs/`）允许压缩，当前为 1600×900 JPEG q90，约 170–230 KB/张；作品内页（`assets/works/bytedance/` 与历史作品大图）保持原始分辨率、不压缩，单页 2–5 MB，翻页/首开下载量较大。若后续要优化内页，只能走无损/近无损方案并先确认。
+- 封面（`assets/thumbs/`）允许压缩，当前为 1600×900 JPEG q90，约 170–230 KB/张；作品内页保留原始分辨率母版，同时提供 960/1280/1920/2560 四档 WebP q95 变体，查看器按屏幕需要加载（1440@1x ≈ 1280w，1440@2x ≈ 2560w，1920@2x/4K 全屏回退原图）。
 - 有 11 个历史遗留、已无引用的 CSS 类（`card-enter`、`company-row`、`experience-card`、`experience-media`、`experience-projects`、`experience-timeline`、`project-caption`、`role-meta`、`timeline-line`、`timeline-shell` 等）可清理。
 - DIN Alternate 仅 macOS 系统自带，Windows/Android 会回退 Helvetica/Arial；若要求跨设备完全一致，需要打包 webfont（注意授权）。
 - 项目导航页左侧公司信息顺序仍是「图标 → 时间 → 公司」，首页是「时间 → 图标 → 公司」；如需统一可再调。
@@ -195,6 +205,7 @@
 ### 6.4 查看器与动效基线
 
 - 卡片或其他项目缩略图进入查看器时统一使用固定克隆层 FLIP；退出首页走反向路径。交接必须使用同一全分辨率内容、保持下层不透明并等待溶解完成，避免尺寸跳变、暗帧和空白帧。
+- 查看器图片按显示尺寸与 DPR 选择 960/1280/1920/2560 WebP 变体，超过 2560 回退原始 PNG；相邻页按同一档位预加载，全屏/resize 自动重选，加载期间用轨道缩略图占位。
 - 翻页、缩略图栏、全屏和末页面板使用 §3.7 的统一时长与缓动令牌；`prefers-reduced-motion` 下关闭位移、缩放和克隆层动画。
 - 全屏优先使用 Fullscreen API，失败时降级为伪全屏；控件自动隐藏，Esc 先退出全屏再返回上级。全屏按钮位于图片下方独立工具栏，不覆盖作品。
 - 「其他项目」面板只在最后一页出现；展开时为面板预留空间并同步压缩、上移作品栈，保证图片、工具栏和面板不重叠。
