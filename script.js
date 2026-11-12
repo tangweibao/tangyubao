@@ -67,6 +67,15 @@ function warmSlideImage(slide) {
   image.src = src;
 }
 
+function whenImageDecoded(image, callback) {
+  if (!image) { callback(); return; }
+  if (typeof image.decode === "function") {
+    image.decode().then(callback, callback);
+  } else {
+    callback();
+  }
+}
+
 // When the viewport, DPR or fullscreen state changes, upgrade/downgrade the
 // current image to the variant that matches the new displayed size.
 let resolutionRefreshToken = 0;
@@ -83,11 +92,13 @@ function refreshArtworkResolution() {
   const preload = new Image();
   preload.decoding = "async";
   preload.onload = () => {
-    if (token !== resolutionRefreshToken || state.screen !== "viewer") return;
-    const active = currentProject()?.slides?.[state.slideIndex];
-    if (active !== slide || pickSlideSource(active) !== wanted) return;
-    if (elements.artwork.getAttribute("src") === wanted) return;
-    elements.artwork.src = wanted;
+    whenImageDecoded(preload, () => {
+      if (token !== resolutionRefreshToken || state.screen !== "viewer") return;
+      const active = currentProject()?.slides?.[state.slideIndex];
+      if (active !== slide || pickSlideSource(active) !== wanted) return;
+      if (elements.artwork.getAttribute("src") === wanted) return;
+      elements.artwork.src = wanted;
+    });
   };
   preload.src = wanted;
 }
@@ -743,12 +754,13 @@ function placeArtwork(slide) {
   elements.artwork.classList.add("is-loading");
   elements.loader.classList.add("is-active");
   setArtworkPlaceholder(slide);
-  elements.artwork.onload = markArtworkReady;
+  const ready = () => whenImageDecoded(elements.artwork, markArtworkReady);
+  elements.artwork.onload = ready;
   elements.artwork.onerror = markArtworkReady;
   elements.artwork.src = pickSlideSource(slide);
   elements.artwork.alt = slide.alt || "";
   renderOverlays(slide);
-  if (elements.artwork.complete) markArtworkReady();
+  if (elements.artwork.complete) ready();
 }
 
 /* ---- composite page media boxes -------------------------------------------
@@ -922,7 +934,6 @@ function crossfadeArtwork(slide) {
   elements.artwork.style.opacity = "0";
   if (elements.slideCanvas) elements.slideCanvas.style.opacity = "0";
   elements.loader.classList.add("is-active");
-  setArtworkPlaceholder(slide);
   elements.artwork.onload = null;
   elements.artwork.onerror = null;
   elements.artwork.src = pickSlideSource(slide);
@@ -953,9 +964,10 @@ function crossfadeArtwork(slide) {
       markArtworkReady();
     }, 340);
   };
-  if (elements.artwork.complete && elements.artwork.naturalWidth) settle();
+  const settleReady = () => whenImageDecoded(elements.artwork, settle);
+  if (elements.artwork.complete && elements.artwork.naturalWidth) settleReady();
   else {
-    elements.artwork.onload = settle;
+    elements.artwork.onload = settleReady;
     elements.artwork.onerror = settle;
   }
 }
@@ -985,12 +997,11 @@ function moveArtwork(slide, direction) {
   ghost.alt = "";
   ghost.style.visibility = "visible";
   ghost.style.transform = "translateY(0)";
-  elements.artwork.classList.add("is-loading");
+  elements.artwork.classList.remove("is-loading");
   elements.loader.classList.add("is-active");
 
   const incoming = new Image();
   const incomingSrc = pickSlideSource(slide);
-  setArtworkPlaceholder(slide);
   const start = () => {
     if (token !== slideAnimToken) return;
     elements.artwork.onload = null;
@@ -999,30 +1010,36 @@ function moveArtwork(slide, direction) {
     elements.artwork.alt = slide.alt;
     elements.artwork.style.transform = `translateY(${direction > 0 ? 100 : -100}%) scale(1.02)`;
     sizeArtworkFrame();
-    void elements.artwork.offsetWidth;
-    const easing = "cubic-bezier(.76, 0, .24, 1)";
-    const duration = 640;
-    ghost.style.transition = `transform ${duration}ms ${easing}`;
-    elements.artwork.style.transition = `transform ${duration}ms ${easing}`;
-    window.requestAnimationFrame(() => {
-      ghost.style.transform = `translateY(${direction > 0 ? -100 : 100}%) scale(.98)`;
-      elements.artwork.style.transform = "translateY(0) scale(1)";
-    });
-    elements.loader.classList.remove("is-active");
-    elements.artwork.classList.remove("is-loading");
-    slideAnimTimer = window.setTimeout(() => {
+    // Decode the image that will actually be displayed before starting the
+    // slide; otherwise the incoming layer can be blank for a frame.
+    whenImageDecoded(elements.artwork, () => {
       if (token !== slideAnimToken) return;
-      ghost.style.visibility = "hidden";
-      ghost.style.transition = "none";
-      elements.artwork.style.transition = "";
-      elements.artwork.style.transform = "";
-      markArtworkReady();
-    }, duration + 40);
+      void elements.artwork.offsetWidth;
+      const easing = "cubic-bezier(.76, 0, .24, 1)";
+      const duration = 640;
+      ghost.style.transition = `transform ${duration}ms ${easing}`;
+      elements.artwork.style.transition = `transform ${duration}ms ${easing}`;
+      window.requestAnimationFrame(() => {
+        ghost.style.transform = `translateY(${direction > 0 ? -100 : 100}%) scale(.98)`;
+        elements.artwork.style.transform = "translateY(0) scale(1)";
+      });
+      elements.loader.classList.remove("is-active");
+      elements.artwork.classList.remove("is-loading");
+      slideAnimTimer = window.setTimeout(() => {
+        if (token !== slideAnimToken) return;
+        ghost.style.visibility = "hidden";
+        ghost.style.transition = "none";
+        elements.artwork.style.transition = "";
+        elements.artwork.style.transform = "";
+        markArtworkReady();
+      }, duration + 40);
+    });
   };
+  const startReady = () => whenImageDecoded(incoming, start);
   incoming.src = incomingSrc;
-  if (incoming.complete && incoming.naturalWidth) start();
+  if (incoming.complete && incoming.naturalWidth) startReady();
   else {
-    incoming.onload = start;
+    incoming.onload = startReady;
     incoming.onerror = start;
   }
 }
