@@ -552,12 +552,12 @@ body[data-screen="viewer"] .viewer-nav { animation: viewer-nav-in .62s var(--eas
 .group-identity { display: flex; flex-direction: column-reverse; align-items: flex-start; gap: 2px; min-width: 0; }
 .group-identity .group-index, .group-identity .group-company { white-space: nowrap; }
 .group-divider { flex: 0 0 auto; width: 1px; height: clamp(24px, 3.4vh, 38px); background: linear-gradient(to bottom, transparent, rgba(255, 255, 255, .22) 18%, rgba(255, 255, 255, .22) 82%, transparent); }
-.group-index { color: #9aa3ae; font-family: "DIN Alternate", "DIN Condensed", "Helvetica Neue", Arial, sans-serif; font-size: 16px; font-weight: 700; line-height: 1.25; letter-spacing: .04em; white-space: nowrap; font-variant-numeric: tabular-nums; }
-.group-mark { display: grid; place-items: center; width: 46px; height: 46px; color: #111214; background: #d7d6d0; font-size: 8px; font-weight: 800; }
+.group-index { color: #9aa3ae; font-family: "DIN Alternate", "DIN Condensed", "Helvetica Neue", Arial, sans-serif; font-size: 14.5px; font-weight: 700; line-height: 1.25; letter-spacing: .04em; white-space: nowrap; font-variant-numeric: tabular-nums; }
+.group-mark { display: grid; place-items: center; width: 41px; height: 41px; color: #111214; background: #d7d6d0; font-size: 8px; font-weight: 800; }
 .group-mark.has-logo { background: transparent; }
 .group-mark img, .company-mark img { display: block; width: 100%; height: 100%; object-fit: contain; }
 .group-copy { display: flex; flex-direction: column; gap: 3px; min-width: 0; flex: 1 1 auto; }
-.group-company { color: #f0f0ed; font-family: Impact, Haettenschweiler, "Arial Narrow Bold", sans-serif; font-size: clamp(13px, 1.15vw, 18px); font-weight: 500; letter-spacing: -.01em; text-transform: uppercase; }
+.group-company { color: #f0f0ed; font-family: Impact, Haettenschweiler, "Arial Narrow Bold", sans-serif; font-size: clamp(12px, 1.05vw, 16px); font-weight: 500; letter-spacing: -.01em; text-transform: uppercase; }
 .group-copy strong { color: #b4b8be; font-size: clamp(10px, .85vw, 12px); font-weight: 450; letter-spacing: .03em; line-height: 1.35; }
 .group-copy small { color: #8a929e; font-size: clamp(10px, .85vw, 12px); letter-spacing: .06em; line-height: 1.35; }
 .group-projects { grid-row: 1; display: flex; align-items: stretch; gap: var(--group-gap); min-height: 0; }
@@ -640,9 +640,9 @@ body[data-screen="viewer"] .viewer-nav { animation: viewer-nav-in .62s var(--eas
   .experience-group { grid-template-rows: minmax(0, 1fr) auto; padding: 0 28px; }
   .group-meta { gap: 9px; max-width: calc(100vw - 40px); }
   .group-divider { height: 30px; }
-  .group-mark { width: 40px; height: 40px; }
-  .group-index { font-size: 14.4px; }
-  .group-company { font-size: 14px; }
+  .group-mark { width: 36px; height: 36px; }
+  .group-index { font-size: 13px; }
+  .group-company { font-size: 12.5px; }
   .group-copy { gap: 2px; }
   .group-copy strong, .group-copy small { font-size: 10px; }
   .stream-project { width: 62vw; max-width: 270px; height: min(54vh, 487px); }
@@ -701,9 +701,9 @@ body[data-screen="viewer"] .viewer-nav { animation: viewer-nav-in .62s var(--eas
   .experience-group { grid-template-rows: minmax(0, 1fr) auto; }
   .group-meta { gap: 8px; }
   .group-divider { height: 26px; }
-  .group-mark { width: 34px; height: 34px; }
-  .group-company { font-size: 12.5px; }
-  .group-index { font-size: 12.8px; }
+  .group-mark { width: 31px; height: 31px; }
+  .group-company { font-size: 11.5px; }
+  .group-index { font-size: 11.5px; }
   .stream-project { height: min(42vh, 300px); }
   .experience-card { padding-top: 29px; }
   .experience-card .period { margin-bottom: 10px; }
@@ -732,9 +732,9 @@ body[data-screen="viewer"] .viewer-nav { animation: viewer-nav-in .62s var(--eas
   .group-meta { gap: 8px; --meta-air-top: 10px; --meta-air-bottom: 30px; }
   .group-divider { height: 22px; }
   .experience-group:last-child { padding-right: 70px; }
-  .group-mark { width: 27px; height: 27px; font-size: 7px; }
-  .group-company { font-size: 10.5px; }
-  .group-index { font-size: 11.2px; }
+  .group-mark { width: 24px; height: 24px; font-size: 7px; }
+  .group-company { font-size: 9.5px; }
+  .group-index { font-size: 10px; }
   .group-copy strong, .group-copy small { font-size: 10px; }
   .stream-project { width: clamp(150px, 22vw, 220px); height: auto; align-self: stretch; }
   .home-footer, .stream-progress { display: none; }
