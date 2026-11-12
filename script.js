@@ -126,7 +126,7 @@ const readingSlide = {
       box: { x: 41.02, y: 33.01, w: 52.45, h: 54.35 },
       fit: "cover",
       radius: 1,
-      muted: true,
+      muted: false,
       loop: false,
       controls: "native"
     }
@@ -165,14 +165,14 @@ const bytedanceOtherSlides = bytedanceOtherOrder.map((fileNumber, index) => {
       overlays: [
         {
           kind: "video",
-          id: "other-content-demo",
-          label: "抖音精选 · 作者内容演示",
-          src: "assets/video/other-content-demo.mp4",
-          poster: "assets/video/other-content-demo-poster.jpg",
+          id: "other-37-demo",
+          label: "抖音其他项目 · 功能演示",
+          src: "assets/video/other-37-demo.mp4",
+          poster: "assets/video/other-37-demo-poster.jpg",
           box: { x: 8.57, y: 25.29, w: 20.71, h: 67.09 },
           fit: "contain",
           radius: 1.8,
-          muted: true,
+          muted: false,
           loop: false,
           controls: "native"
         }
@@ -187,6 +187,31 @@ const bytedanceOtherSlides = bytedanceOtherOrder.map((fileNumber, index) => {
     alt: `抖音其他项目案例第 ${index + 1} 页`
   };
 });
+
+// 抖音AI封面第 6 页（20240539）：左侧一个大手机框，嵌入产品端体验链路录屏。
+const aiCover39Background = `${bytedanceWorks}/ai-cover/06.jpg`;
+bytedanceAiCoverSlides[5] = {
+  type: "composite",
+  background: aiCover39Background,
+  variants: slideVariants(aiCover39Background),
+  thumb: "assets/slide-thumbs/byte-ai-cover-06.jpg",
+  alt: "抖音 AI 封面案例第 6 页（含视频演示）",
+  overlays: [
+    {
+      kind: "video",
+      id: "ai-cover-39-demo",
+      label: "AI 封面 · 产品端体验链路",
+      src: "assets/video/ai-cover-39-demo.mp4",
+      poster: "assets/video/ai-cover-39-demo-poster.jpg",
+      box: { x: 8.63, y: 30.69, w: 18.87, h: 70 },
+      fit: "contain",
+      radius: 1.3,
+      muted: false,
+      loop: false,
+      controls: "native"
+    }
+  ]
+};
 
 // 抖音AI封面第 7 页：三个手机框分别嵌入修改底图 / 添加主题 / 自定义文字
 // 三段录屏，点击播放，保持原背景图不动。
@@ -211,7 +236,7 @@ bytedanceAiCoverSlides[6] = {
     box: { x: item.x, y: item.y, w: item.w, h: item.h },
     fit: "contain",
     radius: item.radius,
-    muted: true,
+    muted: false,
     loop: false,
     controls: "native"
   }))
@@ -859,7 +884,8 @@ function startVideo(box, overlay, button) {
   if (!video) {
     video = document.createElement("video");
     video.className = "media-video";
-    video.muted = overlay.muted !== false;
+    video.muted = overlay.muted === true;
+    video.volume = 1;
     video.loop = Boolean(overlay.loop);
     video.playsInline = true;
     video.preload = "none";
