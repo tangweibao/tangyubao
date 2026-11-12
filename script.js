@@ -73,8 +73,8 @@ const buildWorksSlides = (folder, count, thumbPrefix, label) =>
 
 const bytedancePlatformSlides = buildWorksSlides("platform", 35, "byte-platform", "抖音创作服务平台案例");
 const bytedanceAiCoverSlides = buildWorksSlides("ai-cover", 9, "byte-ai-cover", "抖音 AI 封面案例");
-// 抖音其他项目：把原第 3 页提到第 1 页（其余顺序保持 1、2、4）。
-const bytedanceOtherOrder = [3, 1, 2, 4];
+// 抖音其他项目：新增一张首图（00），随后接原第 3 页与原第 1、2、4 页。
+const bytedanceOtherOrder = [0, 3, 1, 2, 4];
 const bytedanceOtherSlides = bytedanceOtherOrder.map((fileNumber, index) => ({
   src: `${bytedanceWorks}/other/${pad(fileNumber)}.jpg`,
   thumb: `assets/slide-thumbs/byte-other-${pad(fileNumber)}.jpg`,
