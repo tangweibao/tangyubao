@@ -104,7 +104,7 @@ const experiences = {
         name: "抖音创作服务平台",
         type: "PLATFORM · WEB",
         description: "创作者与机构的一站式服务平台",
-        cover: "assets/thumbs/douyin-platform.png",
+        cover: "assets/thumbs/douyin-platform.jpg",
         slides: bytedancePlatformSlides
       },
       {
@@ -112,7 +112,7 @@ const experiences = {
         name: "抖音AI封面",
         type: "AI · COVER DESIGN",
         description: "AI 封面生成与创作体验设计",
-        cover: "assets/thumbs/douyin-ai-cover.webp",
+        cover: "assets/thumbs/douyin-ai-cover.jpg",
         slides: bytedanceAiCoverSlides
       },
       {
@@ -120,7 +120,7 @@ const experiences = {
         name: "抖音其他项目",
         type: "PRODUCT MATRIX",
         description: "多产品线的界面与体验设计",
-        cover: "assets/thumbs/douyin-other.png",
+        cover: "assets/thumbs/douyin-other.jpg",
         slides: bytedanceOtherSlides
       },
       {
@@ -128,7 +128,7 @@ const experiences = {
         name: "个人AI转型实践",
         type: "AI · PERSONAL PRACTICE",
         description: "AI 工具与个人工作流实践",
-        cover: "assets/thumbs/douyin-ai-practice.png",
+        cover: "assets/thumbs/douyin-ai-practice.jpg",
         slides: bytedanceAiPracticeSlides
       }
     ]
@@ -174,7 +174,7 @@ const experiences = {
         name: "金山词霸",
         type: "MOBILE · CONSUMER",
         description: "学习、效率与增长场景的移动产品体验",
-        cover: "assets/thumbs/mobile.webp",
+        cover: "assets/thumbs/mobile.jpg",
         slides: kingsoftSlides
       }
     ]

@@ -20,7 +20,7 @@
 | `script.js` | 数据、hash 路由、横向工作流（阻尼/拖拽）、查看器、缩略图、联系名片、焦点管理 |
 | `assets/fonts/` | Caveat / Kalam woff2（手写体强调） |
 | `assets/marks/` | 三家公司图标 `bytedance / jd / kingsoft.webp`（180–183px，RGBA 透明圆角；`douyin.webp` 保留但已不再引用） |
-| `assets/thumbs/` | 卡片封面（均不压缩）：字节跳动四个项目 + 金山词霸使用原始设计稿 `douyin-platform.png / douyin-ai-cover.webp / douyin-other.png / douyin-ai-practice.png / mobile.webp`；JD 沿用 `jd.jpg` 原封面 |
+| `assets/thumbs/` | 卡片封面（允许压缩）：字节跳动四个项目 + 金山词霸由原始设计稿压成 `douyin-platform / douyin-ai-cover / douyin-other / douyin-ai-practice / mobile.jpg`（1600×900 JPEG q90，~170–230 KB）；JD 沿用 `jd.jpg` 原封面 |
 | `assets/slide-thumbs/` | 查看器缩略图（16:9，320×180；`byte-*` 为字节跳动四个项目、`jd/kingsoft` 为历史项目） |
 | `assets/works/bytedance/` | 2026 作品材料导入的字节跳动四个项目：`platform`（35 页）、`ai-cover`（9 页）、`other`（5 页）、`ai-practice`（5 页图片 + 1 页复合视频）；页面均为原始 3840×2160 PNG，不做缩放/有损压缩（other 首图 `00.png` 来自提供的 2730×1536 原图） |
 | `assets/video/` | 复合页演示视频（1080p H.264，≤12 MB/条）与 `-poster.jpg` 静帧 |
@@ -43,10 +43,11 @@
 
 ### 3.2 卡片封面（首页小卡 + 项目页大卡共用一张）
 
-- 字节跳动四个项目使用独立封面图：`assets/thumbs/douyin-*.png|webp`（直接使用 `2026 作品材料/作品封面` 的原始设计稿，不做缩放或 JPEG 压缩）；封面不跟随第 1 页变化。
-- JD 沿用原封面 `jd.jpg`；金山词霸使用最新金山设计稿原图 `mobile.webp`（不压缩，设计稿随 `2026 作品材料/作品封面` 更新）。
+- 封面允许压缩：字节跳动四个项目 + 金山词霸由原始设计稿压成 1600×900 JPEG q90（首页加载快）；作品内页不压缩，保持原始 3840×2160 PNG。
+- 字节跳动封面 `assets/thumbs/douyin-*.jpg`，来自 `2026 作品材料/作品封面` 设计稿；封面不跟随第 1 页变化。
+- JD 沿用原封面 `jd.jpg`；金山词霸使用最新金山设计稿压缩的 `mobile.jpg`。
 - 卡片呈现与京东零售封面一致：`object-fit: cover` 居中裁切；首页卡与项目页卡比例差异较大（0.25–1.43），保证封面中心内容落在裁切安全区。
-- 换封面时替换对应 `assets/thumbs/*.png|webp` 即可；作品内页顺序与封面相互独立。
+- 换封面时替换对应 `assets/thumbs/*.jpg` 即可；作品内页保持原图、顺序与封面相互独立。
 - **卡片文字层**：顶部是项目名（Impact）+ 页数/类型（`32 PAGES · EXPLORE` 或「项目资料整理中」），底部是序号 `01` + 类型（`PLATFORM · WEB`）；遮罩为「顶部强渐变 + 底部弱渐变」两层，hover 时整层透明度 .76 → .38；`PENDING` 角标位于项目名块下方 52px。
 
 ### 3.3 公司图标
@@ -153,7 +154,7 @@
 ## 5. 已知事项 / 待办
 
 - 平板竖屏（768–820 宽）时项目卡被拉成 0.25–0.38 的超窄长条，封面裁切严重 → 建议给 `.project-card` 限制最大宽高比（如不超过 1:2）。
-- 作品大图是 4K PNG（单张 ~1.4MB，共 82 张）→ 历史项目可评估转 WebP/AVIF；字节跳动四个新项目已按要求使用原始 3840×2160 PNG（不压缩），仓库与 Pages 体积、首屏/翻页下载量相应增大，若后续要优化只能走无损/近无损方案并先确认。
+- 封面（`assets/thumbs/`）允许压缩，当前为 1600×900 JPEG q90，约 170–230 KB/张；作品内页（`assets/works/bytedance/` 与历史作品大图）保持原始分辨率、不压缩，单页 2–5 MB，翻页/首开下载量较大。若后续要优化内页，只能走无损/近无损方案并先确认。
 - 有 11 个历史遗留、已无引用的 CSS 类（`card-enter`、`company-row`、`experience-card`、`experience-media`、`experience-projects`、`experience-timeline`、`project-caption`、`role-meta`、`timeline-line`、`timeline-shell` 等）可清理。
 - DIN Alternate 仅 macOS 系统自带，Windows/Android 会回退 Helvetica/Arial；若要求跨设备完全一致，需要打包 webfont（注意授权）。
 - 项目导航页左侧公司信息顺序仍是「图标 → 时间 → 公司」，首页是「时间 → 图标 → 公司」；如需统一可再调。
@@ -175,7 +176,7 @@
 - 第一段经历的展示品牌为「字节跳动」，但历史路由 ID `douyin` 保持不变，避免破坏已有链接。
 - 字节跳动经历当前包含「抖音创作服务平台」「抖音AI封面」「抖音其他项目」「个人AI转型实践」四个真实项目；京东零售与金山办公各保留一个真实项目。已移除的占位项目不再展示，但禁用项目和坏路由的兜底逻辑继续保留。
 - 「抖音其他项目」共 5 页：第 1 页为新增的「抖音其他项目」总览图（`other/00.png`），后续依次为原第 3、1、2、4 页。
-- 字节跳动四个项目与金山词霸使用独立封面图（`assets/thumbs/douyin-*.png|webp` / `mobile.webp`，来自 `2026 作品材料/作品封面` 原图，不压缩）；JD 沿用原有封面。封面与作品第 1 页可以不同，首页与项目页共用同一封面。
+- 字节跳动四个项目与金山词霸使用独立封面图（`assets/thumbs/douyin-*.jpg` / `mobile.jpg`，由 `2026 作品材料/作品封面` 原图压缩到 1600×900 JPEG q90）；JD 沿用原有封面。封面与作品第 1 页可以不同，首页与项目页共用同一封面。
 
 ### 6.2 视觉与响应式基线
 
