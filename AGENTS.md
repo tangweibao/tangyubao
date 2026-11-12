@@ -20,8 +20,9 @@
 | `script.js` | 数据、hash 路由、横向工作流（阻尼/拖拽）、查看器、缩略图、联系名片、焦点管理 |
 | `assets/fonts/` | Caveat / Kalam woff2（手写体强调） |
 | `assets/marks/` | 三家公司图标 `bytedance / jd / kingsoft.webp`（180–183px，RGBA 透明圆角；`douyin.webp` 保留但已不再引用） |
-| `assets/thumbs/` | 卡片封面 `douyin / jd / mobile`（当前 1200×675 JPG） |
-| `assets/slide-thumbs/` | 查看器缩略图（16:9，320×180，douyin/jd/kingsoft 编号） |
+| `assets/thumbs/` | 卡片封面：`douyin-*.jpg`（字节跳动四个项目，1200×2000 竖版）、`jd / mobile`（1200×675） |
+| `assets/slide-thumbs/` | 查看器缩略图（16:9，320×180；`byte-*` 为字节跳动四个项目、`jd/kingsoft` 为历史项目） |
+| `assets/works/bytedance/` | 2026 作品材料导入的字节跳动四个项目：`platform`（35 页）、`ai-cover`（9 页）、`other`（4 页）、`ai-practice`（5 页图片 + 1 页复合视频），统一 2560×1440 JPEG |
 | `assets/video/` | 复合页演示视频（1080p H.264，≤12 MB/条）与 `-poster.jpg` 静帧 |
 | `assets/demo/` | 复合页 demo 的 PPT 背景图（占位；正式页面由 `.qa/media/compose.html` 产出） |
 | `assets/layers/` | 复合页的 PNG 图层素材（透明 PNG，按清单里的百分比定位） |
@@ -151,14 +152,14 @@
 ## 5. 已知事项 / 待办
 
 - 平板竖屏（768–820 宽）时项目卡被拉成 0.25–0.38 的超窄长条，封面裁切严重 → 建议给 `.project-card` 限制最大宽高比（如不超过 1:2）。
-- 作品大图是 4K PNG（单张 ~1.4MB，共 82 张）→ 可转 WebP/AVIF 并做响应式尺寸，首屏与翻页更快。
+- 作品大图是 4K PNG（单张 ~1.4MB，共 82 张）→ 可转 WebP/AVIF 并做响应式尺寸，首屏与翻页更快；字节跳动四个新项目已按 2560×1440 JPEG（q90，约 0.15–0.45 MB/页）导入。
 - 有 11 个历史遗留、已无引用的 CSS 类（`card-enter`、`company-row`、`experience-card`、`experience-media`、`experience-projects`、`experience-timeline`、`project-caption`、`role-meta`、`timeline-line`、`timeline-shell` 等）可清理。
 - DIN Alternate 仅 macOS 系统自带，Windows/Android 会回退 Helvetica/Arial；若要求跨设备完全一致，需要打包 webfont（注意授权）。
 - 项目导航页左侧公司信息顺序仍是「图标 → 时间 → 公司」，首页是「时间 → 图标 → 公司」；如需统一可再调。
 - 复合页视频托管未定：demo 视频 `assets/video/demo-1080p.mp4`（8.4 MB）目前在仓库里；正式上线前决定「留仓库 / 迁 Cloudflare R2 / 迁 OSS / GitHub Releases 直链」。
 - 复合页只实现了 `play: "click"`；`enter`（进入即播）/ `hover`（悬停预览）两档数据字段已留，渲染逻辑未实现。
-- 复合页第 2 页已换成真实 PPT 页（`assets/demo/ai-reading-01.jpg`，亲声伴读 · iOS 端 AI 开发实践）：视频框按背景空框量得 `x 41.02 / y 33.01 / w 52.45 / h 54.35`、`radius 1`；**视频源仍是 demo 占位**（`assets/video/demo-1080p.mp4`），真实视频到手后替换 `readingSlide.overlays[0].src` 与 `poster` 两行即可。
-- 该真实页面目前挂在「抖音创作服务平台」项目第 2 页；归属（是否单独新建一段「个人项目 / 亲声伴读」经历）待确认。
+- 复合页现挂在「个人AI转型实践」项目第 6 页：背景为 `assets/demo/ai-reading-01.jpg`（亲声伴读 · iOS 端 AI 开发实践），视频框按空框量得 `x 41.02 / y 33.01 / w 52.45 / h 54.35`、`radius 1`；**视频源仍是 demo 占位**（`assets/video/demo-1080p.mp4`），真实视频到手后替换 `readingSlide.overlays[0].src` 与 `poster` 两行即可。
+- 该真实页面已归入「个人AI转型实践」项目（字节跳动经历下第 4 个项目的第 6 页），不再占用「抖音创作服务平台」的页码。
 - `assets/demo/ppt-demo.png` + `assets/slide-thumbs/demo-01.jpg` 保留为 `.qa/media/compose.html` 的默认测试素材，不在站点里引用。
 - 占位项目（抖音分成 / 抖音精选 / 黄金眼 / 小米邮箱 / WPS Office）已从数据里移除；`disabled` 兜底与未知项目回退逻辑保留，`#project/douyin/douyin-revenue` 现在回退到该项目导航页。
 - PNG 图层已在代码与编辑器里跑通，但**还没接过真实的分层 PPT**；真实 `.pptx` 到手后先用 `.qa/media/pptx2layers.py` 对一遍坐标再入库。
@@ -389,3 +390,15 @@
 - **PPT 分层坐标换算**：新增 `.qa/media/pptx2layers.py` —— 读 `.pptx` 的 `sldSz` 与每页图片的 `a:off / a:ext`，EMU 换算成百分比，支持组合（`grpSp` 的 `chOff/chExt`）与嵌套；`--out --copy` 可把媒体文件导出。用构造的双图 + 组内图测试文件验证：独立图片 10/10/20/20 与 50/50/25/25、组合内图片 10/10/20/20 全部精确命中。
 - **移除占位项目**：删除抖音分成、抖音精选、黄金眼、小米邮箱、WPS Office 五个 `disabled` 项目，`projectNames` 同步收敛；首页作品流从 8 张卡变为 3 张真实项目卡，项目导航每段经历只剩 1 张真实封面；`disabled` 兜底与未知项目回退逻辑保留（`#project/douyin/douyin-revenue` 现回退到该项目导航页）。
 - **验证**：`run-qa`（3 视口 `home issues: none`、项目页 1 卡 0 disabled、无失败请求）、`verify-fixes`（禁用/坏路由、返回、焦点全部正常）、`measure-home-layout`（`cardClipped` 全 false）、`measure-projects`（`cardClipped` 0）；PNG 图层注入测试：`z-index` 5、`opacity` 0.85、`pointer-events` none、下层视频仍在；编辑器 PNG 图层导出 `kind/image/opacity/fit` 正确；无 JS 报错、无失败请求。
+
+### 2026-11-12 · 字节跳动经历接入四个 2026 作品材料项目
+
+- **数据来源**：`2026 作品材料/` 下的「抖音创作服务平台」「抖音AI封面」「抖音其他项目」「个人AI转型实践」四个文件夹（均为 3840×2160 PNG）。
+- **项目拆分**：字节跳动经历由 1 个项目扩展为 4 个——
+  1. `douyin-platform` 抖音创作服务平台：35 页（原 2026 版新 deck，替换旧的 32 页 deck）
+  2. `douyin-ai-cover` 抖音AI封面：9 页
+  3. `douyin-other` 抖音其他项目：4 页
+  4. `douyin-ai-practice` 个人AI转型实践：5 页图片 + 1 页复合视频（亲声伴读，沿用原 `readingSlide` + demo 视频）
+- **素材处理**：54 张源图 → 53 页 slide（2560×1440 JPEG q90，约 17 MB）+ 53 张 320×180 缩略图；封面统一生成 1200×2000 竖版 JPEG（暗色底 + 居中的 16:9 截图卡片），放入 `assets/thumbs/douyin-*.jpg`。
+- **兼容性**：`readingSlide` 从「抖音创作服务平台第 2 页」移到「个人AI转型实践第 6 页」；查看器、缩略图、相邻页预加载、复合视频播放、首页/项目页卡片计数全部自动适配（35/9/4/6 PAGES）。
+- **验证**：4 个项目路由与页数、缩略图数量（35/9/4/6）、末页图片加载（2560×1440，无坏图）、复合页播放（`<video>` 注入 demo 源并播放）全部通过；8 视口首页/项目页/预览页布局无裁切、无横向溢出；无 JS 报错、无 HTTP ≥400。

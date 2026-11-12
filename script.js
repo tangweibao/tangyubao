@@ -2,17 +2,6 @@ const assetRoot = "唐尉保作品集2_files";
 
 const pad = (value) => String(value).padStart(2, "0");
 
-const douyinSlides = Array.from({ length: 32 }, (_, index) => {
-  const number = index + 4;
-  const extension = [12, 13, 14, 33].includes(number) ? "jpg" : "png";
-  const separator = extension === "jpg" ? "-" : " ";
-  return {
-    src: `${assetRoot}/${number}${separator}DY.${extension}`,
-    thumb: `assets/slide-thumbs/douyin-${pad(index + 1)}.jpg`,
-    alt: `抖音创作服务平台案例第 ${index + 1} 页`
-  };
-});
-
 const jdSlides = Array.from({ length: 37 }, (_, index) => {
   const number = index + 1;
   const extension = [22, 33].includes(number) ? "jpg" : "png";
@@ -69,7 +58,26 @@ const readingSlide = {
   ]
 };
 
-douyinSlides.splice(1, 0, readingSlide);
+/* ByteDance works imported from 2026 作品材料 (4 folders):
+   converted to 2560×1440 JPEG slides + 320×180 rail thumbs + 1200×2000 covers. */
+const bytedanceWorks = "assets/works/bytedance";
+const buildWorksSlides = (folder, count, thumbPrefix, label) =>
+  Array.from({ length: count }, (_, index) => {
+    const number = pad(index + 1);
+    return {
+      src: `${bytedanceWorks}/${folder}/${number}.jpg`,
+      thumb: `assets/slide-thumbs/${thumbPrefix}-${number}.jpg`,
+      alt: `${label}第 ${index + 1} 页`
+    };
+  });
+
+const bytedancePlatformSlides = buildWorksSlides("platform", 35, "byte-platform", "抖音创作服务平台案例");
+const bytedanceAiCoverSlides = buildWorksSlides("ai-cover", 9, "byte-ai-cover", "抖音 AI 封面案例");
+const bytedanceOtherSlides = buildWorksSlides("other", 4, "byte-other", "抖音其他项目案例");
+const bytedanceAiPracticeSlides = [
+  ...buildWorksSlides("ai-practice", 5, "byte-ai-practice", "个人 AI 转型实践"),
+  readingSlide
+];
 
 const experiences = {
   douyin: {
@@ -83,15 +91,39 @@ const experiences = {
     role: "平台产品设计师",
     meta: "创作平台设计负责人",
     caption: "项目主导与管理",
-    projectNames: ["抖音创作服务平台"],
+    projectNames: ["抖音创作服务平台", "抖音AI封面", "抖音其他项目", "个人AI转型实践"],
     projects: [
       {
         id: "douyin-platform",
         name: "抖音创作服务平台",
         type: "PLATFORM · WEB",
         description: "创作者与机构的一站式服务平台",
-        cover: "assets/thumbs/douyin.jpg",
-        slides: douyinSlides
+        cover: "assets/thumbs/douyin-platform.jpg",
+        slides: bytedancePlatformSlides
+      },
+      {
+        id: "douyin-ai-cover",
+        name: "抖音AI封面",
+        type: "AI · COVER DESIGN",
+        description: "AI 封面生成与创作体验设计",
+        cover: "assets/thumbs/douyin-ai-cover.jpg",
+        slides: bytedanceAiCoverSlides
+      },
+      {
+        id: "douyin-other",
+        name: "抖音其他项目",
+        type: "PRODUCT MATRIX",
+        description: "多产品线的界面与体验设计",
+        cover: "assets/thumbs/douyin-other.jpg",
+        slides: bytedanceOtherSlides
+      },
+      {
+        id: "douyin-ai-practice",
+        name: "个人AI转型实践",
+        type: "AI · PERSONAL PRACTICE",
+        description: "AI 工具与个人工作流实践",
+        cover: "assets/thumbs/douyin-ai-practice.jpg",
+        slides: bytedanceAiPracticeSlides
       }
     ]
   },
