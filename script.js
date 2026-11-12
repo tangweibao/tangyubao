@@ -191,7 +191,11 @@ const platformStack = (numbers, displayNumber, note) => {
 };
 const platformPage = (number) => platformSlide(number, bytedancePlatformSlides.length + 1);
 const bytedancePlatformSlides = [];
-for (let number = 1; number <= 6; number += 1) {
+// Opening six pages: cover, macro background, problem, creator journey,
+// creator lifecycle, then the three-direction framework (source 4) right
+// before the STEP 1-3 chapters. Display numbers follow this order, not the
+// source file numbers.
+for (const number of [1, 2, 5, 3, 6, 4]) {
   bytedancePlatformSlides.push(platformPage(number));
 }
 bytedancePlatformSlides.push(platformStack([7, 8, 9, 10, 11], bytedancePlatformSlides.length + 1, "7–11 页渐隐叠加"));
