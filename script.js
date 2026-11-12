@@ -306,10 +306,32 @@ bytedanceAiCoverSlides[6] = {
     controls: "native"
   }))
 };
+// Pages 1-4 print the deployed product URL in their caption; a transparent
+// hit area sits exactly on that line and opens the product in a new tab.
+const practiceProductUrl = "https://tranquil-harmony-production-e442.up.railway.app/dashboard";
+const practiceLinkBoxes = [
+  { x: 67.8, y: 85.7, w: 21.1, h: 2.6 },
+  { x: 55.2, y: 85.8, w: 32.3, h: 2.4 },
+  { x: 55.2, y: 83.6, w: 32.3, h: 2.4 },
+  { x: 49.4, y: 86.5, w: 32.4, h: 2.4 }
+];
 const bytedanceAiPracticeSlides = [
   ...buildWorksSlides("ai-practice", 5, "byte-ai-practice", "个人 AI 转型实践"),
   readingSlide
-];
+].map((slide, index) => {
+  const box = practiceLinkBoxes[index];
+  if (!box) return slide;
+  return {
+    ...slide,
+    links: [
+      {
+        ...box,
+        href: practiceProductUrl,
+        label: "在新窗口打开「家庭财务系统」产品体验"
+      }
+    ]
+  };
+});
 
 const experiences = {
   douyin: {
@@ -430,6 +452,7 @@ const elements = {
   totalCount: document.querySelector("[data-total-count]"),
   artwork: document.querySelector("[data-main-artwork]"),
   artworkGhost: document.querySelector("[data-artwork-ghost]"),
+  artworkLinks: document.querySelector("[data-artwork-links]"),
   slideCanvas: document.querySelector("[data-slide-canvas]"),
   loader: document.querySelector("[data-image-loader]"),
   thumbnailRail: document.querySelector("[data-thumbnail-rail]"),
@@ -590,6 +613,23 @@ document.addEventListener("fullscreenchange", () => {
   }
   syncFullscreenUI();
   if (fullscreenMorph) window.requestAnimationFrame(() => window.requestAnimationFrame(finishFullscreenMorph));
+});
+
+// Fullscreen reading gesture: left click turns forward, right click turns back.
+// Links, buttons, native video controls and media boxes keep their own clicks.
+function fullscreenPageTarget(event) {
+  if (!isViewerFullscreen() || state.screen !== "viewer") return false;
+  return !event.target.closest?.("a, button, video, audio, .artwork-toolbar, .slide-canvas, .other-projects");
+}
+
+elements.viewerScreen.addEventListener("click", (event) => {
+  if (fullscreenPageTarget(event)) navigateViewer(1);
+});
+
+elements.viewerScreen.addEventListener("contextmenu", (event) => {
+  if (!isViewerFullscreen() || state.screen !== "viewer") return;
+  event.preventDefault();
+  if (fullscreenPageTarget(event)) navigateViewer(-1);
 });
 
 document.addEventListener("pointermove", wakeFullscreenUI, { passive: true });
@@ -916,6 +956,7 @@ function placeArtwork(slide) {
   elements.artwork.onerror = markArtworkReady;
   elements.artwork.src = pickSlideSource(slide);
   elements.artwork.alt = slide.alt || "";
+  renderSlideLinks(slide);
   renderOverlays(slide);
   if (elements.artwork.complete) ready();
 }
@@ -1021,6 +1062,30 @@ function startVideo(box, overlay, button) {
   }
 }
 
+// Pages can carry clickable hotspots that follow the bitmap exactly (percentage
+// boxes, same coordinate system as composite overlays). They are rebuilt after
+// every page change and cleared while a turn or layer fade is in flight.
+function renderSlideLinks(slide) {
+  const layer = elements.artworkLinks;
+  if (!layer) return;
+  layer.textContent = "";
+  const links = slide?.links || [];
+  links.forEach((link) => {
+    const anchor = document.createElement("a");
+    anchor.className = "artwork-link";
+    anchor.href = link.href;
+    anchor.target = "_blank";
+    anchor.rel = "noopener noreferrer";
+    anchor.title = link.label || link.href;
+    anchor.setAttribute("aria-label", link.label || `在新窗口打开 ${link.href}`);
+    anchor.style.left = `${link.x}%`;
+    anchor.style.top = `${link.y}%`;
+    anchor.style.width = `${link.w}%`;
+    anchor.style.height = `${link.h}%`;
+    layer.append(anchor);
+  });
+}
+
 function renderOverlays(slide) {
   const canvas = elements.slideCanvas;
   if (!canvas) return;
@@ -1098,6 +1163,7 @@ function renderOverlays(slide) {
 
 function resetArtworkLayers() {
   window.clearTimeout(slideAnimTimer);
+  if (elements.artworkLinks) elements.artworkLinks.textContent = "";
   slideAnimToken += 1;
   const ghost = elements.artworkGhost;
   if (ghost) {
@@ -1171,6 +1237,7 @@ function moveArtwork(slide, direction) {
         ghost.style.transition = "none";
         elements.artwork.style.transition = "";
         elements.artwork.style.transform = "";
+        renderSlideLinks(slide);
         if (isComposite(slide)) renderOverlays(slide);
         markArtworkReady();
       }, duration + 40);
