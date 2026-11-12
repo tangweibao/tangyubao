@@ -38,7 +38,7 @@ const slideHasVideo = (slide) => slideVideoCount(slide) > 0;
    视频源先用 demo 片段占位——真实视频转码后只替换 src / poster 两行即可。 */
 const readingSlide = {
   type: "composite",
-  background: "assets/demo/ai-reading-01.jpg",
+  background: "assets/demo/ai-reading-01.png",
   thumb: "assets/slide-thumbs/ai-reading-01.jpg",
   alt: "亲声伴读：iOS 端 AI 开发实践（PPT 背景图 + 演示视频）",
   overlays: [
@@ -65,7 +65,7 @@ const buildWorksSlides = (folder, count, thumbPrefix, label) =>
   Array.from({ length: count }, (_, index) => {
     const number = pad(index + 1);
     return {
-      src: `${bytedanceWorks}/${folder}/${number}.jpg`,
+      src: `${bytedanceWorks}/${folder}/${number}.png`,
       thumb: `assets/slide-thumbs/${thumbPrefix}-${number}.jpg`,
       alt: `${label}第 ${index + 1} 页`
     };
@@ -76,7 +76,7 @@ const bytedanceAiCoverSlides = buildWorksSlides("ai-cover", 9, "byte-ai-cover", 
 // 抖音其他项目：新增一张首图（00），随后接原第 3 页与原第 1、2、4 页。
 const bytedanceOtherOrder = [0, 3, 1, 2, 4];
 const bytedanceOtherSlides = bytedanceOtherOrder.map((fileNumber, index) => ({
-  src: `${bytedanceWorks}/other/${pad(fileNumber)}.jpg`,
+  src: `${bytedanceWorks}/other/${pad(fileNumber)}.png`,
   thumb: `assets/slide-thumbs/byte-other-${pad(fileNumber)}.jpg`,
   alt: `抖音其他项目案例第 ${index + 1} 页`
 }));
@@ -104,7 +104,7 @@ const experiences = {
         name: "抖音创作服务平台",
         type: "PLATFORM · WEB",
         description: "创作者与机构的一站式服务平台",
-        cover: "assets/thumbs/douyin-platform.jpg",
+        cover: "assets/thumbs/douyin-platform.png",
         slides: bytedancePlatformSlides
       },
       {
@@ -112,7 +112,7 @@ const experiences = {
         name: "抖音AI封面",
         type: "AI · COVER DESIGN",
         description: "AI 封面生成与创作体验设计",
-        cover: "assets/thumbs/douyin-ai-cover.jpg",
+        cover: "assets/thumbs/douyin-ai-cover.webp",
         slides: bytedanceAiCoverSlides
       },
       {
@@ -120,7 +120,7 @@ const experiences = {
         name: "抖音其他项目",
         type: "PRODUCT MATRIX",
         description: "多产品线的界面与体验设计",
-        cover: "assets/thumbs/douyin-other.jpg",
+        cover: "assets/thumbs/douyin-other.png",
         slides: bytedanceOtherSlides
       },
       {
@@ -128,7 +128,7 @@ const experiences = {
         name: "个人AI转型实践",
         type: "AI · PERSONAL PRACTICE",
         description: "AI 工具与个人工作流实践",
-        cover: "assets/thumbs/douyin-ai-practice.jpg",
+        cover: "assets/thumbs/douyin-ai-practice.png",
         slides: bytedanceAiPracticeSlides
       }
     ]
@@ -174,7 +174,7 @@ const experiences = {
         name: "金山词霸",
         type: "MOBILE · CONSUMER",
         description: "学习、效率与增长场景的移动产品体验",
-        cover: "assets/thumbs/mobile.jpg",
+        cover: "assets/thumbs/mobile.webp",
         slides: kingsoftSlides
       }
     ]
