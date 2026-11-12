@@ -327,6 +327,13 @@ body[data-screen="viewer"] .site-header { grid-template-columns: auto minmax(0, 
 .media-video { position: absolute; inset: 0; display: block; width: 100%; height: 100%; object-fit: cover; }
 .media-box.is-contain .media-poster,
 .media-box.is-contain .media-video { object-fit: contain; }
+/* .artwork-frame img (class + element) otherwise forces contain on every
+   overlay; these selectors have equal-or-higher specificity so a video can
+   actually fill its measured frame. */
+.artwork-frame .media-poster,
+.artwork-frame .media-video { object-fit: cover; }
+.artwork-frame .media-box.is-contain .media-poster,
+.artwork-frame .media-box.is-contain .media-video { object-fit: contain; }
 .media-video { z-index: 2; background: #000; }
 /* static PNG layers poured into the PPT layout: transparent, no play button,
    and clicks pass through to whatever sits underneath */

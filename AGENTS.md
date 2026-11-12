@@ -137,6 +137,7 @@
 - **翻页与进出场**：复合页不参与 640ms `translateY` 翻页（视频位移会掉帧），改用 320ms 交叉淡入；卡片→大图 / 大图→卡片的 FLIP 克隆层只用「背景 + poster」，**不移动 `<video>`**。
 - **清理**：离开页面 / 退出预览时销毁 `<video>`（`pause()` + 移除 `src` + `load()`）；实测翻走后 `<video>` 元素 0 个、`[data-slide-canvas]` 隐藏。
 - **缩略图**：背景图 + 蓝色 `▶` 角标（多个视频显示数量），`aria-label` 追加「（含视频）」。
+- **视频铺满**：视频/ poster 的 `object-fit` 必须是 `cover`，让画面填满手机框；`.artwork-frame img` 的全局 `contain` 会覆盖普通 `.media-poster` 规则，必须用 `.artwork-frame .media-poster/.media-video` 这类更高特异性选择器修正，否则框内会出现黑边缝隙。
 - **当前视频页**：
   - 抖音其他项目第 3 页（`other/01.jpg`）：1 个视频框 `x 8.57 / y 25.29 / w 20.71 / h 67.09`，接 `other-37-demo.mp4`（来源 `37.mov`）；
   - 抖音AI封面第 6 页（`ai-cover/06.jpg`）：1 个视频框 `x 8.63 / y 30.69 / w 18.87 / h 70`，接 `ai-cover-39-demo.mp4`（来源 `对应20240539.mov`）；
