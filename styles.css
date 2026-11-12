@@ -562,7 +562,7 @@ body[data-screen="viewer"] .viewer-nav { animation: viewer-nav-in .62s var(--eas
 .group-copy small { color: #8a929e; font-size: clamp(10px, .85vw, 12px); letter-spacing: .06em; line-height: 1.35; }
 .group-projects { grid-row: 1; display: flex; align-items: stretch; gap: var(--group-gap); min-height: 0; }
 
-.stream-project { position: relative; z-index: 1; flex: 0 0 auto; width: clamp(175px, 15vw, 270px); height: 100%; max-height: 100%; align-self: stretch; overflow: hidden; padding: 0; border: 0; background: #1a1b1d; color: #fff; text-align: left; cursor: pointer; animation: stream-card-in .9s both var(--ease); transition: transform .7s var(--ease), filter .55s, opacity .45s, box-shadow .5s; }
+.stream-project { position: relative; z-index: 1; flex: 0 0 auto; width: clamp(210px, 18vw, 324px); height: 100%; max-height: 100%; align-self: stretch; overflow: hidden; padding: 0; border: 0; background: #1a1b1d; color: #fff; text-align: left; cursor: pointer; animation: stream-card-in .9s both var(--ease); transition: transform .7s var(--ease), filter .55s, opacity .45s, box-shadow .5s; }
 .stream-project:nth-child(2) { animation-delay: .08s; }
 .stream-project:nth-child(3) { animation-delay: .16s; }
 @keyframes stream-card-in { from { opacity: 0; translate: 0 36px; } to { opacity: 1; translate: 0; } }
@@ -645,7 +645,7 @@ body[data-screen="viewer"] .viewer-nav { animation: viewer-nav-in .62s var(--eas
   .group-company { font-size: 12.5px; }
   .group-copy { gap: 2px; }
   .group-copy strong, .group-copy small { font-size: 10px; }
-  .stream-project { width: 62vw; max-width: 270px; height: min(54vh, 487px); }
+  .stream-project { width: 74.4vw; max-width: 324px; height: min(54vh, 487px); }
   .stream-progress { width: calc(100vw - 40px); }
   .experience-card { padding-top: 32px; }
   .experience-media { height: 78px; }
@@ -736,7 +736,7 @@ body[data-screen="viewer"] .viewer-nav { animation: viewer-nav-in .62s var(--eas
   .group-company { font-size: 9.5px; }
   .group-index { font-size: 10px; }
   .group-copy strong, .group-copy small { font-size: 10px; }
-  .stream-project { width: clamp(150px, 22vw, 220px); height: auto; align-self: stretch; }
+  .stream-project { width: clamp(180px, 26.4vw, 264px); height: auto; align-self: stretch; }
   .home-footer, .stream-progress { display: none; }
   .projects-intro { padding: 34px 34px 24px; justify-content: center; }
   .project-panel { padding: 20px 26px 18px; }
