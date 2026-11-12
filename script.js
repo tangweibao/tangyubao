@@ -98,7 +98,7 @@ const experiences = {
         name: "抖音创作服务平台",
         type: "PLATFORM · WEB",
         description: "创作者与机构的一站式服务平台",
-        cover: "assets/thumbs/douyin-platform.jpg",
+        cover: "assets/works/bytedance/platform/01.jpg",
         slides: bytedancePlatformSlides
       },
       {
@@ -106,7 +106,7 @@ const experiences = {
         name: "抖音AI封面",
         type: "AI · COVER DESIGN",
         description: "AI 封面生成与创作体验设计",
-        cover: "assets/thumbs/douyin-ai-cover.jpg",
+        cover: "assets/works/bytedance/ai-cover/01.jpg",
         slides: bytedanceAiCoverSlides
       },
       {
@@ -114,7 +114,7 @@ const experiences = {
         name: "抖音其他项目",
         type: "PRODUCT MATRIX",
         description: "多产品线的界面与体验设计",
-        cover: "assets/thumbs/douyin-other.jpg",
+        cover: "assets/works/bytedance/other/01.jpg",
         slides: bytedanceOtherSlides
       },
       {
@@ -122,7 +122,7 @@ const experiences = {
         name: "个人AI转型实践",
         type: "AI · PERSONAL PRACTICE",
         description: "AI 工具与个人工作流实践",
-        cover: "assets/thumbs/douyin-ai-practice.jpg",
+        cover: "assets/works/bytedance/ai-practice/01.jpg",
         slides: bytedanceAiPracticeSlides
       }
     ]
