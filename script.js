@@ -215,7 +215,9 @@ const bytedanceOtherSlides = bytedanceOtherOrder.map((fileNumber, index) => {
           poster: "assets/video/other-37-demo-poster.jpg",
           box: { x: 8.57, y: 25.29, w: 20.71, h: 67.09 },
           fit: "cover",
-          radius: 1.8,
+          objectPosition: "top",
+          radius: 1.6,
+          radiusCorners: { tl: 1.6, tr: 1.6, br: 0, bl: 0 },
           muted: false,
           loop: false,
           controls: "native"
@@ -987,6 +989,14 @@ function renderOverlays(slide) {
     box.style.width = `${overlay.box.w}%`;
     box.style.height = `${overlay.box.h}%`;
     box.style.setProperty("--media-radius", overlay.radius ?? 0);
+    if (overlay.radiusCorners) {
+      const corners = overlay.radiusCorners;
+      box.style.setProperty("--media-radius-tl", corners.tl ?? overlay.radius ?? 0);
+      box.style.setProperty("--media-radius-tr", corners.tr ?? overlay.radius ?? 0);
+      box.style.setProperty("--media-radius-br", corners.br ?? overlay.radius ?? 0);
+      box.style.setProperty("--media-radius-bl", corners.bl ?? overlay.radius ?? 0);
+    }
+    if (overlay.objectPosition) box.style.setProperty("--media-object-position", overlay.objectPosition);
     box.style.setProperty("--media-shadow", overlay.shadow ?? 0);
     if (overlay.z != null) box.style.zIndex = String(overlay.z);
     if (overlay.opacity != null) box.style.opacity = String(overlay.opacity);

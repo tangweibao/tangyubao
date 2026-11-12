@@ -319,12 +319,15 @@ body[data-screen="viewer"] .site-header { grid-template-columns: auto minmax(0, 
   position: absolute;
   overflow: hidden;
   background: #0b0d10;
-  border-radius: calc(var(--frame-unit, 4px) * var(--media-radius, 0));
+  border-top-left-radius: calc(var(--frame-unit, 4px) * var(--media-radius-tl, var(--media-radius, 0)));
+  border-top-right-radius: calc(var(--frame-unit, 4px) * var(--media-radius-tr, var(--media-radius, 0)));
+  border-bottom-right-radius: calc(var(--frame-unit, 4px) * var(--media-radius-br, var(--media-radius, 0)));
+  border-bottom-left-radius: calc(var(--frame-unit, 4px) * var(--media-radius-bl, var(--media-radius, 0)));
   pointer-events: auto;
   box-shadow: 0 calc(var(--frame-unit, 4px) * var(--media-shadow, 0)) calc(var(--frame-unit, 4px) * var(--media-shadow, 0) * 2.6) rgba(0, 0, 0, .45);
 }
 .media-poster,
-.media-video { position: absolute; inset: 0; display: block; width: 100%; height: 100%; object-fit: cover; }
+.media-video { position: absolute; inset: 0; display: block; width: 100%; height: 100%; object-fit: cover; object-position: var(--media-object-position, center); }
 .media-box.is-contain .media-poster,
 .media-box.is-contain .media-video { object-fit: contain; }
 /* .artwork-frame img (class + element) otherwise forces contain on every
