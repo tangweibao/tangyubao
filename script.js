@@ -73,7 +73,13 @@ const buildWorksSlides = (folder, count, thumbPrefix, label) =>
 
 const bytedancePlatformSlides = buildWorksSlides("platform", 35, "byte-platform", "抖音创作服务平台案例");
 const bytedanceAiCoverSlides = buildWorksSlides("ai-cover", 9, "byte-ai-cover", "抖音 AI 封面案例");
-const bytedanceOtherSlides = buildWorksSlides("other", 4, "byte-other", "抖音其他项目案例");
+// 抖音其他项目：把原第 3 页提到第 1 页（其余顺序保持 1、2、4）。
+const bytedanceOtherOrder = [3, 1, 2, 4];
+const bytedanceOtherSlides = bytedanceOtherOrder.map((fileNumber, index) => ({
+  src: `${bytedanceWorks}/other/${pad(fileNumber)}.jpg`,
+  thumb: `assets/slide-thumbs/byte-other-${pad(fileNumber)}.jpg`,
+  alt: `抖音其他项目案例第 ${index + 1} 页`
+}));
 const bytedanceAiPracticeSlides = [
   ...buildWorksSlides("ai-practice", 5, "byte-ai-practice", "个人 AI 转型实践"),
   readingSlide
@@ -114,7 +120,7 @@ const experiences = {
         name: "抖音其他项目",
         type: "PRODUCT MATRIX",
         description: "多产品线的界面与体验设计",
-        cover: "assets/works/bytedance/other/01.jpg",
+        cover: "assets/works/bytedance/other/03.jpg",
         slides: bytedanceOtherSlides
       },
       {
@@ -374,6 +380,10 @@ function updateRailMask() {
   rail.classList.toggle("is-no-scroll", max <= 2);
   rail.classList.toggle("is-at-top", max > 2 && position <= 2);
   rail.classList.toggle("is-at-bottom", max > 2 && position >= max - 2);
+  // Fewer than 10 pages: if they all fit, center them vertically in the rail
+  // instead of leaving the empty space at the bottom (wide screens only).
+  const count = rail.querySelectorAll(".thumbnail").length;
+  rail.classList.toggle("is-short-list", count > 0 && count < 10 && max <= 2);
 }
 
 elements.thumbnailRail.addEventListener("scroll", updateRailMask, { passive: true });

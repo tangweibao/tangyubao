@@ -373,6 +373,7 @@ body[data-screen="viewer"] .site-header { grid-template-columns: auto minmax(0, 
 .thumbnail-label { display: grid; gap: 6px; }
 .thumbnail-label span { color: #939ca7; font-size: 8px; letter-spacing: .2em; }
 .thumbnail-label small { color: #7d8794; font-size: 8px; line-height: 1.5; }
+.thumbnail-rail.is-short-list { justify-content: center; }
 .thumbnail-rail { --rail-fade: 18px; --rail-mask: linear-gradient(to bottom, transparent 0, #000 var(--rail-fade), #000 calc(100% - var(--rail-fade)), transparent 100%); flex: 1 1 auto; min-height: 0; display: flex; flex-direction: column; gap: 10px; overflow-x: hidden; overflow-y: auto; padding: 2px 2px 4px; scroll-behavior: smooth; scrollbar-width: thin; scrollbar-color: #303944 transparent; -webkit-mask-image: var(--rail-mask); mask-image: var(--rail-mask); }
 .thumbnail-rail.is-at-top { --rail-mask: linear-gradient(to bottom, #000 0, #000 calc(100% - var(--rail-fade)), transparent 100%); }
 .thumbnail-rail.is-at-bottom { --rail-mask: linear-gradient(to bottom, transparent 0, #000 var(--rail-fade), #000 100%); }
@@ -729,6 +730,7 @@ body[data-screen="viewer"] .viewer-nav { animation: viewer-nav-in .62s var(--eas
   .thumbnail-dock { grid-column: 1; grid-row: 2; flex-direction: row; align-items: center; gap: 8px; padding: 8px 10px calc(8px + env(safe-area-inset-bottom)); border-left: 0; border-top: 1px solid rgba(255, 255, 255, .08); }
   .thumbnail-label { display: none; }
   .thumbnail-rail { flex-direction: row; overflow-x: auto; overflow-y: hidden; gap: 8px; padding: 2px; --rail-fade: 14px; --rail-mask: linear-gradient(to right, transparent 0, #000 var(--rail-fade), #000 calc(100% - var(--rail-fade)), transparent 100%); }
+  .thumbnail-rail.is-short-list { justify-content: flex-start; }
   .thumbnail-rail.is-at-top { --rail-mask: linear-gradient(to right, #000 0, #000 calc(100% - var(--rail-fade)), transparent 100%); }
   .thumbnail-rail.is-at-bottom { --rail-mask: linear-gradient(to right, transparent 0, #000 var(--rail-fade), #000 100%); }
   .thumbnail-rail.is-no-scroll { --rail-mask: none; }
