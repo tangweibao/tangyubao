@@ -39,9 +39,19 @@ const slideVariants = (src) => {
   }));
 };
 
+const isStack = (slide) => Boolean(slide && slide.type === "stack");
+const stackProgress = new WeakMap();
+const stackIndex = (slide) => stackProgress.get(slide) ?? 0;
+const activeVisualSlide = (slide) => {
+  if (!isStack(slide)) return slide;
+  const layers = slide.layers || [];
+  return layers[Math.max(0, Math.min(stackIndex(slide), layers.length - 1))] || slide;
+};
+
 const pickSlideSource = (slide) => {
-  const base = slideSource(slide);
-  const variants = slide?.variants;
+  const visual = activeVisualSlide(slide);
+  const base = slideSource(visual);
+  const variants = visual?.variants;
   if (!base || !variants?.length) return base;
   const frame = document.querySelector(".artwork-frame");
   const cssWidth = frame?.clientWidth || Math.min(window.innerWidth * 0.82, 1920);
@@ -59,6 +69,10 @@ kingsoftSlides.forEach((slide) => { slide.variants = slideVariants(slide.src); }
 
 const warmedImageSources = new Set();
 function warmSlideImage(slide) {
+  if (isStack(slide)) {
+    (slide.layers || []).forEach((layer) => warmSlideImage(layer));
+    return;
+  }
   const src = pickSlideSource(slide);
   if (!src || warmedImageSources.has(src)) return;
   warmedImageSources.add(src);
@@ -84,8 +98,9 @@ function refreshArtworkResolution() {
   if (elements.artwork.classList.contains("is-loading")) return;
   const project = currentProject();
   const slide = project?.slides?.[state.slideIndex];
-  if (!slide || isComposite(slide) || !slide.variants?.length) return;
-  const wanted = pickSlideSource(slide);
+  const visual = activeVisualSlide(slide);
+  if (!slide || !visual || isComposite(visual) || !visual.variants?.length) return;
+  const wanted = pickSlideSource(visual);
   const current = elements.artwork.getAttribute("src") || "";
   if (!wanted || wanted === current) return;
   const token = ++resolutionRefreshToken;
@@ -95,7 +110,7 @@ function refreshArtworkResolution() {
     whenImageDecoded(preload, () => {
       if (token !== resolutionRefreshToken || state.screen !== "viewer") return;
       const active = currentProject()?.slides?.[state.slideIndex];
-      if (active !== slide || pickSlideSource(active) !== wanted) return;
+      if (active !== slide || pickSlideSource(activeVisualSlide(active)) !== wanted) return;
       if (elements.artwork.getAttribute("src") === wanted) return;
       elements.artwork.src = wanted;
     });
@@ -148,7 +163,35 @@ const buildWorksSlides = (folder, count, thumbPrefix, label) =>
     };
   });
 
-const bytedancePlatformSlides = buildWorksSlides("platform", 35, "byte-platform", "抖音创作服务平台案例");
+const platformSlide = (number, displayNumber) => {
+  const src = `${bytedanceWorks}/platform/${pad(number)}.png`;
+  return {
+    src,
+    variants: slideVariants(src),
+    thumb: `assets/slide-thumbs/byte-platform-${pad(number)}.jpg`,
+    alt: `抖音创作服务平台案例第 ${displayNumber} 页`
+  };
+};
+
+// Pages 13-16 are one scroll-stacked page: 13 is the base, then 14/15/16
+// slide up over it as the visitor keeps scrolling. Subsequent pages shift up.
+const platformStackLayers = [13, 14, 15, 16].map((number) => platformSlide(number, number));
+const platformStackSlide = {
+  type: "stack",
+  src: platformStackLayers[0].src,
+  variants: platformStackLayers[0].variants,
+  thumb: platformStackLayers[0].thumb,
+  alt: "抖音创作服务平台案例第 13 页（13–16 页滚动叠加）",
+  layers: platformStackLayers
+};
+const bytedancePlatformSlides = [];
+for (let number = 1; number <= 12; number += 1) {
+  bytedancePlatformSlides.push(platformSlide(number, bytedancePlatformSlides.length + 1));
+}
+bytedancePlatformSlides.push(platformStackSlide);
+for (let number = 17; number <= 35; number += 1) {
+  bytedancePlatformSlides.push(platformSlide(number, bytedancePlatformSlides.length + 1));
+}
 const bytedanceAiCoverSlides = buildWorksSlides("ai-cover", 9, "byte-ai-cover", "抖音 AI 封面案例");
 // 抖音其他项目：新增一张首图（00），随后接原第 3 页与原第 1、2、4 页。
 // 其中原第 1 页（37.jpg）是视频页：背景图 + 左侧手机框内嵌内容演示。
@@ -1160,6 +1203,106 @@ function scheduleThumbnailReveal(delay = 160) {
   thumbnailRevealTimer = window.setTimeout(() => revealCurrentThumbnail("smooth"), delay);
 }
 
+let stackStepLock = 0;
+
+function animateStackStep(slide, nextIndex, direction) {
+  const ghost = elements.artworkGhost;
+  const targetLayer = slide.layers[nextIndex];
+  const targetSrc = pickSlideSource(targetLayer);
+  const token = ++slideAnimToken;
+  window.clearTimeout(slideAnimTimer);
+  elements.artwork.onload = null;
+  elements.artwork.onerror = null;
+  elements.artwork.classList.remove("is-loading");
+  if (!ghost) {
+    placeArtwork(targetLayer);
+    return;
+  }
+  const easing = "cubic-bezier(.76, 0, .24, 1)";
+  const duration = 560;
+  if (direction > 0) {
+    // the next panel rises from the bottom and covers the current layer
+    ghost.style.transition = "none";
+    ghost.style.visibility = "visible";
+    ghost.style.opacity = "";
+    ghost.style.transform = "translateY(100%)";
+    ghost.src = targetSrc;
+    ghost.alt = "";
+    whenImageDecoded(ghost, () => {
+      if (token !== slideAnimToken) return;
+      ghost.style.transition = `transform ${duration}ms ${easing}`;
+      window.requestAnimationFrame(() => {
+        if (token !== slideAnimToken) return;
+        ghost.style.transform = "translateY(0)";
+      });
+      slideAnimTimer = window.setTimeout(() => {
+        if (token !== slideAnimToken) return;
+        elements.artwork.src = targetSrc;
+        elements.artwork.alt = targetLayer.alt || "";
+        elements.artwork.style.transition = "";
+        elements.artwork.style.transform = "";
+        window.requestAnimationFrame(() => {
+          ghost.style.visibility = "hidden";
+          ghost.style.transition = "none";
+          ghost.style.transform = "";
+          markArtworkReady();
+        });
+      }, duration + 40);
+    });
+  } else {
+    // the current top layer slides down, revealing the previous layer
+    const currentSrc = elements.artwork.currentSrc || elements.artwork.src;
+    ghost.style.transition = "none";
+    ghost.style.visibility = "visible";
+    ghost.style.opacity = "";
+    ghost.style.transform = "translateY(0)";
+    ghost.src = currentSrc;
+    ghost.alt = "";
+    elements.artwork.style.transition = "none";
+    elements.artwork.src = targetSrc;
+    elements.artwork.alt = targetLayer.alt || "";
+    elements.artwork.style.transform = "";
+    whenImageDecoded(elements.artwork, () => {
+      if (token !== slideAnimToken) return;
+      ghost.style.transition = `transform ${duration}ms ${easing}`;
+      window.requestAnimationFrame(() => {
+        if (token !== slideAnimToken) return;
+        ghost.style.transform = "translateY(100%)";
+      });
+      slideAnimTimer = window.setTimeout(() => {
+        if (token !== slideAnimToken) return;
+        elements.artwork.style.transition = "";
+        ghost.style.visibility = "hidden";
+        ghost.style.transition = "none";
+        ghost.style.transform = "";
+        markArtworkReady();
+      }, duration + 40);
+    });
+  }
+}
+
+function stepStack(direction) {
+  const project = currentProject();
+  const slide = project?.slides?.[state.slideIndex];
+  if (!isStack(slide)) return false;
+  const layers = slide.layers || [];
+  const current = stackIndex(slide);
+  const next = current + direction;
+  if (next < 0 || next >= layers.length) return false;
+  const now = performance.now();
+  // consume repeated wheel ticks while one layer transition is in flight
+  if (now < stackStepLock) return true;
+  stackStepLock = now + 620;
+  stackProgress.set(slide, next);
+  animateStackStep(slide, next, direction);
+  return true;
+}
+
+function navigateViewer(direction) {
+  if (stepStack(direction)) return;
+  showSlide(state.slideIndex + direction);
+}
+
 function showSlide(index, scrollThumbnail = true) {
   const project = currentProject();
   if (!project?.slides?.length) return;
@@ -1167,6 +1310,10 @@ function showSlide(index, scrollThumbnail = true) {
   const direction = index === state.slideIndex ? 0 : (index > state.slideIndex ? 1 : -1);
   state.slideIndex = (index + project.slides.length) % project.slides.length;
   const slide = project.slides[state.slideIndex];
+  if (isStack(slide)) {
+    stackProgress.set(slide, direction < 0 ? slide.layers.length - 1 : 0);
+    stackStepLock = 0;
+  }
   elements.currentCount.textContent = pad(state.slideIndex + 1);
   elements.fullscreenCurrent.textContent = pad(state.slideIndex + 1);
   const isLastSlide = state.slideIndex === project.slides.length - 1;
@@ -1613,8 +1760,8 @@ document.addEventListener("keydown", (event) => {
     if (event.key === "End") jumpStream(1);
   }
   if (state.screen === "viewer") {
-    if (event.key === "ArrowDown" || event.key === "PageDown") showSlide(state.slideIndex + 1);
-    if (event.key === "ArrowUp" || event.key === "PageUp") showSlide(state.slideIndex - 1);
+    if (event.key === "ArrowDown" || event.key === "PageDown") navigateViewer(1);
+    if (event.key === "ArrowUp" || event.key === "PageUp") navigateViewer(-1);
     if (event.key === "Escape") {
       if (isViewerFullscreen()) {
         beginFullscreenMorph();
@@ -1632,7 +1779,7 @@ let swipeStartY = 0;
 elements.artworkFrame.addEventListener("pointerdown", (event) => { swipeStartY = event.clientY; });
 elements.artworkFrame.addEventListener("pointerup", (event) => {
   const distance = swipeStartY - event.clientY;
-  if (Math.abs(distance) > 60) showSlide(state.slideIndex + (distance > 0 ? 1 : -1));
+  if (Math.abs(distance) > 60) navigateViewer(distance > 0 ? 1 : -1);
 });
 
 const viewerElement = elements.screens.find((screen) => screen.dataset.screen === "viewer");
@@ -1653,7 +1800,7 @@ viewerElement.addEventListener("wheel", (event) => {
   const direction = Math.sign(viewerWheelDelta);
   viewerWheelDelta = 0;
   viewerWheelLock = now + 230;
-  showSlide(state.slideIndex + direction);
+  navigateViewer(direction);
 }, { passive: false });
 
 window.addEventListener("popstate", handleRoute);
