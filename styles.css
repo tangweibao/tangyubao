@@ -744,3 +744,7 @@ body[data-screen="viewer"] .viewer-nav { animation: viewer-nav-in .62s var(--eas
   .thumbnail-rail.is-no-scroll { --rail-mask: none; }
   .thumbnail { flex: 0 0 auto; width: auto; height: clamp(54px, 8vh, 78px); }
 }
+
+/* Keep the thumbnail boot placeholder to a single cover image; the later
+   .artwork-frame shorthand above would otherwise reset repeat/size. */
+.artwork-frame { background-position: center; background-size: cover; background-repeat: no-repeat; }

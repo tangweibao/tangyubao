@@ -828,6 +828,11 @@ function markArtworkReady() {
 function setArtworkPlaceholder(slide) {
   const thumb = slideThumb(slide);
   elements.artworkFrame.style.backgroundImage = thumb ? `url("${thumb}")` : "";
+  // Inline these too: the later .artwork-frame shorthand resets them, and a
+  // repeating 320×180 thumbnail looked like a wall of many images on refresh.
+  elements.artworkFrame.style.backgroundSize = "cover";
+  elements.artworkFrame.style.backgroundRepeat = "no-repeat";
+  elements.artworkFrame.style.backgroundPosition = "center";
 }
 
 function placeArtwork(slide) {
@@ -1198,7 +1203,13 @@ function setActiveScreen(screenName) {
       screen.scrollTop = 0;
     }
     screen.classList.toggle("is-active", active);
-    if (!active) window.setTimeout(() => { if (!screen.classList.contains("is-active")) screen.hidden = true; }, 430);
+    if (!active) {
+      // Initial deep-link render has no cross-screen transition to protect;
+      // hiding immediately prevents the home card grid from painting behind
+      // the viewer while its entry transition is still running.
+      if (!routeHydrated) screen.hidden = true;
+      else window.setTimeout(() => { if (!screen.classList.contains("is-active")) screen.hidden = true; }, 430);
+    }
   });
 }
 
@@ -1816,4 +1827,7 @@ renderTimeline();
 runStream();
 handleRoute();
 routeHydrated = true;
+// Reveal the routed screen only after it has been hydrated; otherwise a hard
+// refresh on a deep link paints the home stream (many large cards) first.
+window.requestAnimationFrame(() => document.documentElement.classList.remove("is-booting"));
 if (document.fonts?.ready) document.fonts.ready.then(() => scheduleStreamMeasure(60));
