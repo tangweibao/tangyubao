@@ -151,8 +151,34 @@ const buildWorksSlides = (folder, count, thumbPrefix, label) =>
 const bytedancePlatformSlides = buildWorksSlides("platform", 35, "byte-platform", "抖音创作服务平台案例");
 const bytedanceAiCoverSlides = buildWorksSlides("ai-cover", 9, "byte-ai-cover", "抖音 AI 封面案例");
 // 抖音其他项目：新增一张首图（00），随后接原第 3 页与原第 1、2、4 页。
+// 其中原第 1 页（37.jpg）是视频页：背景图 + 左侧手机框内嵌内容演示。
 const bytedanceOtherOrder = [0, 3, 1, 2, 4];
+const otherVideoBackground = `${bytedanceWorks}/other/01.jpg`;
 const bytedanceOtherSlides = bytedanceOtherOrder.map((fileNumber, index) => {
+  if (fileNumber === 1) {
+    return {
+      type: "composite",
+      background: otherVideoBackground,
+      variants: slideVariants(otherVideoBackground),
+      thumb: "assets/slide-thumbs/byte-other-01.jpg",
+      alt: "抖音其他项目案例第 3 页（含视频演示）",
+      overlays: [
+        {
+          kind: "video",
+          id: "other-content-demo",
+          label: "抖音精选 · 作者内容演示",
+          src: "assets/video/other-content-demo.mp4",
+          poster: "assets/video/other-content-demo-poster.jpg",
+          box: { x: 8.57, y: 25.29, w: 20.71, h: 67.09 },
+          fit: "contain",
+          radius: 1.8,
+          muted: true,
+          loop: false,
+          controls: "native"
+        }
+      ]
+    };
+  }
   const src = `${bytedanceWorks}/other/${pad(fileNumber)}.png`;
   return {
     src,
@@ -161,6 +187,35 @@ const bytedanceOtherSlides = bytedanceOtherOrder.map((fileNumber, index) => {
     alt: `抖音其他项目案例第 ${index + 1} 页`
   };
 });
+
+// 抖音AI封面第 7 页：三个手机框分别嵌入修改底图 / 添加主题 / 自定义文字
+// 三段录屏，点击播放，保持原背景图不动。
+const aiCoverVideoBackground = `${bytedanceWorks}/ai-cover/07.jpg`;
+const aiCoverVideoBoxes = [
+  { x: 29.7, y: 33.12, w: 17.8, h: 70, radius: 1.3, label: "修改底图", src: "assets/video/ai-cover-step-1.mp4", poster: "assets/video/ai-cover-step-1-poster.jpg" },
+  { x: 52.14, y: 33.12, w: 17.8, h: 70, radius: 1.3, label: "添加主题", src: "assets/video/ai-cover-step-2.mp4", poster: "assets/video/ai-cover-step-2-poster.jpg" },
+  { x: 74.64, y: 33.12, w: 17.74, h: 70, radius: 1.3, label: "自定义文字", src: "assets/video/ai-cover-step-3.mp4", poster: "assets/video/ai-cover-step-3-poster.jpg" }
+];
+bytedanceAiCoverSlides[6] = {
+  type: "composite",
+  background: aiCoverVideoBackground,
+  variants: slideVariants(aiCoverVideoBackground),
+  thumb: "assets/slide-thumbs/byte-ai-cover-07.jpg",
+  alt: "抖音 AI 封面案例第 7 页（含视频演示）",
+  overlays: aiCoverVideoBoxes.map((item, index) => ({
+    kind: "video",
+    id: `ai-cover-step-${index + 1}`,
+    label: `AI 封面 · ${item.label}`,
+    src: item.src,
+    poster: item.poster,
+    box: { x: item.x, y: item.y, w: item.w, h: item.h },
+    fit: "contain",
+    radius: item.radius,
+    muted: true,
+    loop: false,
+    controls: "native"
+  }))
+};
 const bytedanceAiPracticeSlides = [
   ...buildWorksSlides("ai-practice", 5, "byte-ai-practice", "个人 AI 转型实践"),
   readingSlide
