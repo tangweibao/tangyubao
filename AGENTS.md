@@ -22,7 +22,7 @@
 | `assets/marks/` | 三家公司图标 `bytedance / jd / kingsoft.webp`（180–183px，RGBA 透明圆角；`douyin.webp` 保留但已不再引用） |
 | `assets/thumbs/` | 卡片封面（允许压缩）：字节跳动四个项目 + 金山词霸由原始设计稿压成 `douyin-platform / douyin-ai-cover / douyin-other / douyin-ai-practice / mobile.jpg`（1600×900 JPEG q90，~170–230 KB）；JD 沿用 `jd.jpg` 原封面 |
 | `assets/slide-thumbs/` | 查看器缩略图（16:9，320×180；`byte-*` 为字节跳动四个项目、`jd/kingsoft` 为历史项目） |
-| `assets/works/bytedance/` | 2026 作品材料导入的字节跳动四个项目：`platform`（32 页；原 13–16 页合并为 1 页滚动叠加）、`ai-cover`（9 页）、`other`（5 页）、`ai-practice`（5 页图片 + 1 页复合视频）；原图均为原始 3840×2160 PNG，不做缩放/有损压缩；每页旁边有 `.w960/.w1280/.w1920/.w2560.webp` 响应式变体（q95）。其中 `other/01.jpg`、`ai-cover/06.jpg`、`ai-cover/07.jpg` 已换成 2026 图库的 5760×3240 视频页背景 |
+| `assets/works/bytedance/` | 2026 作品材料导入的字节跳动四个项目：`platform`（32 页；原 13–16 页合并为 1 页滚动叠加）、`ai-cover`（9 页）、`other`（5 页）、`ai-practice`（5 页图片 + 1 页复合视频）；原图均为原始 3840×2160 PNG，不做缩放/有损压缩；每页旁边有 `.w960/.w1280/.w1920/.w2560.webp` 响应式变体（q95）。其中 `other/01.jpg`、`ai-cover/06.jpg`、`ai-cover/07.jpg` 已换成 2026 图库的 5760×3240 视频页背景；视频页另生成 `*-preview.jpg`（背景 + poster 合成，用于统一翻页） |
 | `assets/video/` | 复合页演示视频（H.264，≤12 MB/条）与 `-poster.jpg` 静帧：`other-37-demo`（37.mov，18s）、`ai-cover-39-demo`（对应20240539.mov，14s）、`ai-cover-step-1/2/3`（20240540-1/2/3.mov），以及旧的 `demo-1080p.mp4`；**当前源视频均无音轨** |
 | `assets/demo/` | 复合页 demo 的 PPT 背景图（占位；正式页面由 `.qa/media/compose.html` 产出） |
 | `assets/layers/` | 复合页的 PNG 图层素材（透明 PNG，按清单里的百分比定位） |
@@ -133,17 +133,18 @@
 ### 3.8 复合页（PPT 背景图 + 视频框）
 
 - **形态**：一页 = 一张 PPT 导出的 16:9 背景图 + 叠在背景上的 1..n 个视频框；视频与这一页绑定，翻页时整页一起走。
-- **数据**：`{ type: "composite", background, thumb, alt, overlays: [{ kind: "video", id, label, src, poster, box: { x, y, w, h }, fit, radius, muted, loop, controls, play }] }`；无 `type` 视为普通图片页，老数据零迁移。
+- **数据**：`{ type: "composite", src, variants, background, thumb, alt, overlays: [{ kind: "video", id, label, src, poster, box: { x, y, w, h }, fit, radius, muted, loop, controls, play }] }`；`src` 是背景 + poster 预合成的预览图（用于统一翻页/克隆层），`background` 保留原始背景，旧图片页零迁移。
 - **定位**：`box` 用百分比（相对整页），`radius`/`shadow` 用「页宽的百分比」——`sizeArtworkFrame()` 把页宽写入 `--frame-unit`，CSS 用 `calc(var(--frame-unit) * var(--media-radius))`。实测 6 个视口 x/y/w/h 与清单完全一致、圆角随页宽 2.7→4.1px 等比缩放。
 - **播放**：默认**点击播放**——未播放只有 poster + 居中 ▶，`<video>` 连 `src` 都没有（零流量）；点击才注入 `src`，显示原生控件、默认不静音（数据 `muted:false`，`volume:1`）；**同一页只播一个**（点新的先暂停旧的且不回弹 ▶，用原生控件继续）；播完 ▶ 重新出现用于重播。源视频目前无音轨时仍无声。
-- **翻页与进出场**：复合页不参与 640ms `translateY` 翻页（视频位移会掉帧），改用 320ms 交叉淡入；卡片→大图 / 大图→卡片的 FLIP 克隆层只用「背景 + poster」，**不移动 `<video>`**。
+- **翻页与进出场**：视频页与其他页统一使用 640ms `translateY` 上下翻页。转场期间隐藏 overlay canvas、使用预合成 `src` 预览图（背景 + poster）参与滑动/克隆层；转场结束后再显示 canvas。这样既保持全局滚动一致，也不会移动 `<video>`。
 - **清理**：离开页面 / 退出预览时销毁 `<video>`（`pause()` + 移除 `src` + `load()`）；实测翻走后 `<video>` 元素 0 个、`[data-slide-canvas]` 隐藏。
 - **缩略图**：背景图 + 蓝色 `▶` 角标（多个视频显示数量），`aria-label` 追加「（含视频）」。
 - **视频铺满**：视频/ poster 的 `object-fit` 必须是 `cover`，让画面填满手机框；`.artwork-frame img` 的全局 `contain` 会覆盖普通 `.media-poster` 规则，必须用 `.artwork-frame .media-poster/.media-video` 这类更高特异性选择器修正，否则框内会出现黑边缝隙。
 - **当前视频页**：
-  - 抖音其他项目第 3 页（`other/01.jpg`）：1 个视频框 `x 8.57 / y 25.29 / w 20.71 / h 67.09`，接 `other-37-demo.mp4`（来源 `37.mov`）；
-  - 抖音AI封面第 6 页（`ai-cover/06.jpg`）：1 个视频框 `x 8.63 / y 30.69 / w 18.87 / h 70`，接 `ai-cover-39-demo.mp4`（来源 `对应20240539.mov`）；
-  - 抖音AI封面第 7 页（`ai-cover/07.jpg`）：3 个视频框 `x 29.7 / 52.14 / 74.64`、`y 33.12`、`w 17.8 / 17.8 / 17.74`、`h 70`，分别接 `ai-cover-step-1/2/3.mp4`（来源 `20240540-1/2/3.mov`）；
+  - 抖音其他项目第 3 页（`other/01-preview.jpg`）：1 个视频框 `x 8.57 / y 25.29 / w 20.71 / h 67.09`，接 `other-37-demo.mp4`（来源 `37.mov`）；
+  - 抖音AI封面第 6 页（`ai-cover/06-preview.jpg`）：1 个视频框 `x 8.63 / y 30.69 / w 18.87 / h 70`，接 `ai-cover-39-demo.mp4`（来源 `对应20240539.mov`）；
+  - 抖音AI封面第 7 页（`ai-cover/07-preview.jpg`）：3 个视频框 `x 29.7 / 52.14 / 74.64`、`y 33.12`、`w 17.8 / 17.8 / 17.74`、`h 70`，分别接 `ai-cover-step-1/2/3.mp4`（来源 `20240540-1/2/3.mov`）；
+  - 个人AI转型实践第 6 页（`assets/demo/ai-reading-01-preview.jpg`）：1 个视频框 `x 41.02 / y 33.01 / w 52.45 / h 54.35`，接 `demo-1080p.mp4`（demo 占位）；
   - 视频统一 592×1280 H.264 + 592×1280 JPEG poster，点击播放、同页只播一个；**默认不静音**，原生控件可调音量。
 - **产出方式**：本地放置编辑器 `.qa/media/compose.html`（工作区辅助文件，不提交）拖入背景图与视频 → 拖动/缩放框 → 自动截 poster → 导出 slide 对象粘进 `script.js`；视频先转 720p 竖屏 H.264（≤12 MB/条）。
 - **改写视频源**：`overlays[].src` 支持相对路径或绝对 URL，换托管只改前缀，其他代码不动。
@@ -241,7 +242,7 @@
 ### 6.5 复合媒体页基线
 
 - 查看器支持普通图片页与 `type: "composite"` 复合页共存；复合页由 16:9 背景、百分比定位的视频框和 PNG 图层组成，旧图片数据无需迁移。
-- 视频默认点击后才注入 `src`，同页只播放一个；离页时暂停、移除源并销毁元素。复合页翻页使用交叉淡入，FLIP 只移动背景与 poster，不移动视频元素。
+- 视频默认点击后才注入 `src`，同页只播放一个；离页时暂停、移除源并销毁元素。视频页与其他页一致使用 640ms 上下翻页，转场使用预合成 preview 图、隐藏 canvas，结束后恢复 overlay。
 - PNG 图层与视频共用百分比坐标体系，支持层级、透明度、适配方式和等比圆角；分层 PPT 应先用现有编辑器或坐标转换工具校验后再入库。
 - 「个人AI转型实践」第 6 页保留当前复合页实现；正式视频到位后只替换数据中的 `src` 与 `poster`。
 - 抖音其他项目第 3 页、抖音AI封面第 6/7 页为视频复合页；视频/ poster 与框坐标以 §3.8 为准；播放器不强制静音，但源视频目前无音轨。

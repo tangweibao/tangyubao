@@ -27,7 +27,7 @@ const kingsoftSlides = kingsoftPages.map((number, index) => ({
    placement editor (.qa/media/compose.html).
 --------------------------------------------------------------------------- */
 const isComposite = (slide) => Boolean(slide && slide.type === "composite");
-const slideSource = (slide) => (isComposite(slide) ? slide.background : slide?.src);
+const slideSource = (slide) => (isComposite(slide) ? (slide.src || slide.background) : slide?.src);
 // High-res originals stay untouched; the viewer loads the smallest WebP that
 // still covers the frame at the current device pixel ratio. The original is
 // the fallback for large/retina/fullscreen displays.
@@ -99,7 +99,7 @@ function refreshArtworkResolution() {
   const project = currentProject();
   const slide = project?.slides?.[state.slideIndex];
   const visual = activeVisualSlide(slide);
-  if (!slide || !visual || isComposite(visual) || !visual.variants?.length) return;
+  if (!slide || !visual || !visual.variants?.length) return;
   const wanted = pickSlideSource(visual);
   const current = elements.artwork.getAttribute("src") || "";
   if (!wanted || wanted === current) return;
@@ -120,15 +120,15 @@ function refreshArtworkResolution() {
 const slideThumb = (slide) => slide?.thumb || slideSource(slide);
 const slideVideoCount = (slide) =>
   isComposite(slide) ? (slide.overlays || []).filter((overlay) => overlay.kind === "video").length : 0;
-const slideHasVideo = (slide) => slideVideoCount(slide) > 0;
 
 /* 真实 PPT 页：亲声伴读 · iOS 端 AI 开发实践（第 6 页）。
    背景图已按空框位置量好（x/y/w/h 为相对整页的百分比），
    视频源先用 demo 片段占位——真实视频转码后只替换 src / poster 两行即可。 */
 const readingSlide = {
   type: "composite",
+  src: "assets/demo/ai-reading-01-preview.jpg",
+  variants: slideVariants("assets/demo/ai-reading-01-preview.jpg"),
   background: "assets/demo/ai-reading-01.png",
-  variants: slideVariants("assets/demo/ai-reading-01.png"),
   thumb: "assets/slide-thumbs/ai-reading-01.jpg",
   alt: "亲声伴读：iOS 端 AI 开发实践（PPT 背景图 + 演示视频）",
   overlays: [
@@ -201,8 +201,9 @@ const bytedanceOtherSlides = bytedanceOtherOrder.map((fileNumber, index) => {
   if (fileNumber === 1) {
     return {
       type: "composite",
+      src: `${bytedanceWorks}/other/01-preview.jpg`,
       background: otherVideoBackground,
-      variants: slideVariants(otherVideoBackground),
+      variants: slideVariants(`${bytedanceWorks}/other/01-preview.jpg`),
       thumb: "assets/slide-thumbs/byte-other-01.jpg",
       alt: "抖音其他项目案例第 3 页（含视频演示）",
       overlays: [
@@ -235,8 +236,9 @@ const bytedanceOtherSlides = bytedanceOtherOrder.map((fileNumber, index) => {
 const aiCover39Background = `${bytedanceWorks}/ai-cover/06.jpg`;
 bytedanceAiCoverSlides[5] = {
   type: "composite",
+  src: `${bytedanceWorks}/ai-cover/06-preview.jpg`,
   background: aiCover39Background,
-  variants: slideVariants(aiCover39Background),
+  variants: slideVariants(`${bytedanceWorks}/ai-cover/06-preview.jpg`),
   thumb: "assets/slide-thumbs/byte-ai-cover-06.jpg",
   alt: "抖音 AI 封面案例第 6 页（含视频演示）",
   overlays: [
@@ -266,8 +268,9 @@ const aiCoverVideoBoxes = [
 ];
 bytedanceAiCoverSlides[6] = {
   type: "composite",
+  src: `${bytedanceWorks}/ai-cover/07-preview.jpg`,
   background: aiCoverVideoBackground,
-  variants: slideVariants(aiCoverVideoBackground),
+  variants: slideVariants(`${bytedanceWorks}/ai-cover/07-preview.jpg`),
   thumb: "assets/slide-thumbs/byte-ai-cover-07.jpg",
   alt: "抖音 AI 封面案例第 7 页（含视频演示）",
   overlays: aiCoverVideoBoxes.map((item, index) => ({
@@ -1045,74 +1048,10 @@ function resetArtworkLayers() {
   elements.artwork.style.opacity = "";
 }
 
-/* Composite pages (background + media boxes) can't ride the translateY turn:
-   sliding a decoding <video> layer stutters, so they cross-fade instead. */
-function crossfadeArtwork(slide) {
-  const ghost = elements.artworkGhost;
-  const previousSrc = elements.artwork.currentSrc || elements.artwork.src;
-  resetArtworkLayers();
-  renderOverlays(slide);
-  if (!ghost || !previousSrc) {
-    placeArtwork(slide);
-    return;
-  }
-  const token = slideAnimToken;
-  ghost.src = previousSrc;
-  ghost.alt = "";
-  ghost.style.visibility = "visible";
-  ghost.style.transition = "none";
-  ghost.style.opacity = "1";
-  elements.artwork.style.transition = "none";
-  elements.artwork.style.opacity = "0";
-  if (elements.slideCanvas) elements.slideCanvas.style.opacity = "0";
-  elements.loader.classList.add("is-active");
-  elements.artwork.onload = null;
-  elements.artwork.onerror = null;
-  elements.artwork.src = pickSlideSource(slide);
-  elements.artwork.alt = slide.alt || "";
-  const settle = () => {
-    if (token !== slideAnimToken) return;
-    elements.artwork.onload = null;
-    elements.artwork.onerror = null;
-    elements.artwork.style.transition = "opacity 320ms ease";
-    ghost.style.transition = "opacity 320ms ease";
-    if (elements.slideCanvas) elements.slideCanvas.style.transition = "opacity 320ms ease";
-    void elements.artwork.offsetWidth;
-    elements.artwork.style.opacity = "1";
-    ghost.style.opacity = "0";
-    if (elements.slideCanvas) elements.slideCanvas.style.opacity = "1";
-    elements.loader.classList.remove("is-active");
-    window.setTimeout(() => {
-      if (token !== slideAnimToken) return;
-      ghost.style.visibility = "hidden";
-      ghost.style.transition = "none";
-      ghost.style.opacity = "";
-      elements.artwork.style.transition = "";
-      elements.artwork.style.opacity = "";
-      if (elements.slideCanvas) {
-        elements.slideCanvas.style.transition = "";
-        elements.slideCanvas.style.opacity = "";
-      }
-      markArtworkReady();
-    }, 340);
-  };
-  const settleReady = () => whenImageDecoded(elements.artwork, settle);
-  if (elements.artwork.complete && elements.artwork.naturalWidth) settleReady();
-  else {
-    elements.artwork.onload = settleReady;
-    elements.artwork.onerror = settle;
-  }
-}
-
 /* Page turn: the outgoing page slides out while the next one slides in from
    the opposite edge (the damped vertical motion used by motion-led sites). */
 function moveArtwork(slide, direction) {
   const ghost = elements.artworkGhost;
-  const leavingComposite = elements.slideCanvas && !elements.slideCanvas.hidden;
-  if (leavingComposite || slideHasVideo(slide)) {
-    crossfadeArtwork(slide);
-    return;
-  }
   if (!ghost || slideMotionQuery.matches) {
     resetArtworkLayers();
     placeArtwork(slide);
@@ -1120,6 +1059,7 @@ function moveArtwork(slide, direction) {
   }
   const previousSrc = elements.artwork.currentSrc || elements.artwork.src;
   resetArtworkLayers();
+  resetMediaBoxes();
   if (!previousSrc) {
     placeArtwork(slide);
     return;
@@ -1163,6 +1103,7 @@ function moveArtwork(slide, direction) {
         ghost.style.transition = "none";
         elements.artwork.style.transition = "";
         elements.artwork.style.transform = "";
+        if (isComposite(slide)) renderOverlays(slide);
         markArtworkReady();
       }, duration + 40);
     });
