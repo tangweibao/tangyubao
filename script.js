@@ -810,7 +810,10 @@ function renderViewer() {
     </button>`;
   }).join("");
   showSlide(state.slideIndex, false);
-  window.requestAnimationFrame(updateRailMask);
+  window.requestAnimationFrame(() => {
+    updateRailMask();
+    revealCurrentThumbnail("auto");
+  });
 }
 
 const slideMotionQuery = window.matchMedia("(prefers-reduced-motion: reduce)");
@@ -1130,6 +1133,33 @@ function moveArtwork(slide, direction) {
   }
 }
 
+let thumbnailRevealTimer = 0;
+
+// Center the active thumbnail without chasing every wheel event. Rapid page
+// turns used to queue multiple smooth scrollIntoView() calls on the rail,
+// which made it visibly bounce up and down while the next image was loading.
+function revealCurrentThumbnail(behavior = "smooth") {
+  const rail = elements.thumbnailRail;
+  const active = rail?.querySelector(".thumbnail.is-current");
+  if (!rail || !active || !rail.clientHeight) return;
+  const horizontal = getComputedStyle(rail).flexDirection === "row";
+  const railRect = rail.getBoundingClientRect();
+  const thumbRect = active.getBoundingClientRect();
+  const current = horizontal ? rail.scrollLeft : rail.scrollTop;
+  const viewport = horizontal ? rail.clientWidth : rail.clientHeight;
+  const size = horizontal ? thumbRect.width : thumbRect.height;
+  const start = (horizontal ? thumbRect.left - railRect.left : thumbRect.top - railRect.top) + current;
+  const max = Math.max(0, horizontal ? rail.scrollWidth - rail.clientWidth : rail.scrollHeight - rail.clientHeight);
+  const target = Math.min(max, Math.max(0, start - (viewport - size) / 2));
+  if (Math.abs(target - current) < 1) return;
+  rail.scrollTo(horizontal ? { left: target, top: 0, behavior } : { left: 0, top: target, behavior });
+}
+
+function scheduleThumbnailReveal(delay = 160) {
+  window.clearTimeout(thumbnailRevealTimer);
+  thumbnailRevealTimer = window.setTimeout(() => revealCurrentThumbnail("smooth"), delay);
+}
+
 function showSlide(index, scrollThumbnail = true) {
   const project = currentProject();
   if (!project?.slides?.length) return;
@@ -1158,7 +1188,7 @@ function showSlide(index, scrollThumbnail = true) {
   });
 
   const activeThumbnail = thumbnails[state.slideIndex];
-  if (scrollThumbnail && activeThumbnail) activeThumbnail.scrollIntoView({ behavior: "smooth", block: "center", inline: "center" });
+  if (scrollThumbnail && activeThumbnail) scheduleThumbnailReveal();
   if (document.activeElement?.closest(".thumbnail-rail") && activeThumbnail) activeThumbnail.focus({ preventScroll: true });
 
   [-1, 1].forEach((offset) => {
@@ -1818,8 +1848,8 @@ window.addEventListener("resize", () => {
   sizeArtworkFrame();
   refreshArtworkResolution();
   if (state.screen === "viewer") {
-    const current = elements.thumbnailRail.querySelector(".thumbnail.is-current");
-    if (current) current.scrollIntoView({ block: "center", inline: "center" });
+    window.clearTimeout(thumbnailRevealTimer);
+    revealCurrentThumbnail("auto");
   }
 });
 
