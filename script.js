@@ -643,7 +643,9 @@ function sizeArtworkFrame() {
   const padBottom = parseFloat(style.paddingBottom);
   const availableWidth = stage.clientWidth - parseFloat(style.paddingLeft) - parseFloat(style.paddingRight);
   const toolbar = elements.fullscreenToggle?.closest(".artwork-toolbar");
-  const toolbarHeight = toolbar ? toolbar.offsetHeight + 16 : 0;
+  // In fullscreen the exit button floats over the page, so the artwork can use
+  // the whole screen instead of reserving a row underneath it.
+  const toolbarHeight = isViewerFullscreen() ? 0 : (toolbar ? toolbar.offsetHeight + 16 : 0);
   const reserve = syncPanelReserve();
   const availableHeight = stage.clientHeight - padTop - padBottom - toolbarHeight - reserve;
   if (availableWidth <= 0 || availableHeight <= 0) return;

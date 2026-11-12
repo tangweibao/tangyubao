@@ -259,14 +259,19 @@ body[data-screen="viewer"] .site-header { grid-template-columns: auto minmax(0, 
 .fullscreen-toggle .icon-collapse { display: none; }
 .viewer-screen.is-fullscreen .fullscreen-toggle .icon-expand { display: none; }
 .viewer-screen.is-fullscreen .fullscreen-toggle .icon-collapse { display: block; }
-.fullscreen-count { display: none; position: absolute; z-index: 4; left: 50%; bottom: 20px; transform: translateX(-50%); align-items: baseline; gap: 6px; color: #7d8794; font-size: 10px; letter-spacing: .16em; }
+.fullscreen-count { display: none; position: absolute; z-index: 4; left: 50%; bottom: 20px; transform: translateX(-50%); align-items: baseline; gap: 6px; color: #7d8794; font-size: 10px; letter-spacing: .16em; transition: opacity .35s ease, transform .35s var(--ease); }
 .fullscreen-count b { color: #f4f5f6; font-size: 15px; font-weight: 500; }
 .viewer-screen.is-fullscreen .fullscreen-count { display: flex; left: auto; right: clamp(16px, 2.2vw, 34px); bottom: 24px; transform: none; }
 .viewer-screen.is-fullscreen .thumbnail-dock { display: none; }
 .viewer-screen.is-fullscreen .viewer-stage { padding: 0; }
+/* fullscreen: the page uses the whole screen; the exit button and page
+   number float over it instead of reserving layout space */
+.viewer-screen.is-fullscreen .artwork-toolbar { position: absolute; left: 50%; bottom: 10px; width: auto; transform: translateX(-50%); }
+
 .viewer-screen:fullscreen { padding-top: 0; grid-template-columns: minmax(0, 1fr); background: #111214; }
 .viewer-screen.is-pseudo-fullscreen { position: fixed; inset: 0; z-index: 90; padding-top: 0; grid-template-columns: minmax(0, 1fr); background: #111214; }
 .viewer-screen.is-fullscreen.is-ui-idle .fullscreen-toggle { opacity: 0; transform: translateY(6px); pointer-events: none; }
+.viewer-screen.is-fullscreen.is-ui-idle .fullscreen-count { opacity: 0; transform: translateY(6px); pointer-events: none; }
 
 /* Thumbnail rail slides in/out from its own edge */
 .thumbnail-dock { transition: transform .55s cubic-bezier(.22, 1, .36, 1), opacity .4s ease; }
