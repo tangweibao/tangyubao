@@ -141,9 +141,10 @@ const readingSlide = {
       box: { x: 41.02, y: 33.01, w: 52.45, h: 54.35 },
       fit: "cover",
       radius: 1,
-      muted: false,
+      muted: true,
       loop: false,
-      controls: "native"
+      controls: "native",
+      soundHint: "注意检查电脑音量后，可取消静音播放"
     }
   ]
 };
@@ -926,6 +927,24 @@ function pauseAllMedia() {
   });
 }
 
+function hideSoundHint(box) {
+  const hint = box?.querySelector(".media-sound-hint");
+  if (!hint) return;
+  window.clearTimeout(hint._hideTimer);
+  hint.classList.remove("is-visible");
+}
+
+function showSoundHint(box, overlay) {
+  const hint = box?.querySelector(".media-sound-hint");
+  if (!hint || !overlay.soundHint) return;
+  window.clearTimeout(hint._hideTimer);
+  hint.hidden = false;
+  window.requestAnimationFrame(() => hint.classList.add("is-visible"));
+  hint._hideTimer = window.setTimeout(() => {
+    hint.classList.remove("is-visible");
+  }, 7000);
+}
+
 function startVideo(box, overlay, button) {
   if (box.dataset.playing === "true") return;
   // one playing demo per page: starting a second one pauses the first
@@ -952,11 +971,22 @@ function startVideo(box, overlay, button) {
       box.classList.remove("is-loading");
       box.dataset.playing = "true";
       button.classList.add("is-hidden");
+      if (video.muted) showSoundHint(box, overlay);
+      else hideSoundHint(box);
     });
+    video.addEventListener("volumechange", () => {
+      if (video.muted) {
+        if (box.dataset.playing === "true") showSoundHint(box, overlay);
+      } else {
+        hideSoundHint(box);
+      }
+    });
+    video.addEventListener("pause", () => hideSoundHint(box));
     video.addEventListener("waiting", () => box.classList.add("is-loading"));
     video.addEventListener("ended", () => {
       box.dataset.playing = "false";
       button.classList.remove("is-hidden");
+      hideSoundHint(box);
     });
     box.append(video);
   }
@@ -1033,6 +1063,14 @@ function renderOverlays(slide) {
     button.innerHTML = '<span class="media-play-icon" aria-hidden="true"><svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M9 6.4 18.2 12 9 17.6z"></path></svg></span>';
     button.addEventListener("click", () => startVideo(box, overlay, button));
     box.append(button);
+    if (overlay.soundHint) {
+      const hint = document.createElement("div");
+      hint.className = "media-sound-hint";
+      hint.setAttribute("role", "status");
+      hint.textContent = overlay.soundHint;
+      hint.hidden = true;
+      box.append(hint);
+    }
     canvas.append(box);
   });
 }

@@ -135,8 +135,9 @@
 - **形态**：一页 = 一张 PPT 导出的 16:9 背景图 + 叠在背景上的 1..n 个视频框；视频与这一页绑定，翻页时整页一起走。
 - **数据**：`{ type: "composite", src, variants, background, thumb, alt, overlays: [{ kind: "video", id, label, src, poster, box: { x, y, w, h }, fit, radius, radiusCorners?, objectPosition?, muted, loop, controls, play }] }`；`src` 是背景 + poster 预合成的预览图（用于统一翻页/克隆层），`background` 保留原始背景；`radiusCorners` 可分别设置四角，`objectPosition` 控制媒体裁切焦点。旧图片页零迁移。
 - **定位**：`box` 用百分比（相对整页），`radius`/`shadow` 用「页宽的百分比」——`sizeArtworkFrame()` 把页宽写入 `--frame-unit`，CSS 用 `calc(var(--frame-unit) * var(--media-radius))`。实测 6 个视口 x/y/w/h 与清单完全一致、圆角随页宽 2.7→4.1px 等比缩放。
-- **播放**：默认**点击播放**——未播放只有 poster + 居中 ▶，`<video>` 连 `src` 都没有（零流量）；点击才注入 `src`，显示原生控件、默认不静音（数据 `muted:false`，`volume:1`）；**同一页只播一个**（点新的先暂停旧的且不回弹 ▶，用原生控件继续）；播完 ▶ 重新出现用于重播。源视频目前无音轨时仍无声。
+- **播放**：默认**点击播放**——未播放只有 poster + 居中 ▶，`<video>` 连 `src` 都没有（零流量）；点击才注入 `src`，显示原生控件、默认不静音（数据 `muted:false`，`volume:1`）；例外：个人AI转型实践视频默认静音（`muted:true`）。**同一页只播一个**（点新的先暂停旧的且不回弹 ▶，用原生控件继续）；播完 ▶ 重新出现用于重播。源视频没有音轨时仍无声。
 - **翻页与进出场**：视频页与其他页统一使用 640ms `translateY` 上下翻页。转场期间隐藏 overlay canvas、使用预合成 `src` 预览图（背景 + poster）参与滑动/克隆层；转场结束后再显示 canvas。这样既保持全局滚动一致，也不会移动 `<video>`。
+- **声音提示**：带 `soundHint` 的视频在静音播放时，于原生控制条音量图标上方浮出提示「注意检查电脑音量后，可取消静音播放」，7 秒后自动淡出；取消静音、暂停或播放结束时立即隐藏。实现用 `.media-sound-hint`（`pointer-events:none`，不挡原生控件）。
 - **清理**：离开页面 / 退出预览时销毁 `<video>`（`pause()` + 移除 `src` + `load()`）；实测翻走后 `<video>` 元素 0 个、`[data-slide-canvas]` 隐藏。
 - **缩略图**：背景图 + 蓝色 `▶` 角标（多个视频显示数量），`aria-label` 追加「（含视频）」。
 - **视频铺满**：视频/ poster 的 `object-fit` 必须是 `cover`，让画面填满手机框；`.artwork-frame img` 的全局 `contain` 会覆盖普通 `.media-poster` 规则，必须用 `.artwork-frame .media-poster/.media-video` 这类更高特异性选择器修正，否则框内会出现黑边缝隙。
@@ -145,8 +146,8 @@
   - 抖音其他项目第 3 页（`other/01-preview.jpg`）：1 个视频框 `x 8.57 / y 25.29 / w 20.71 / h 67.09`，`objectPosition: top`、上方圆角 1.6 / 下方 0，接 `other-37-demo.mp4`（来源 `37.mov`）；
   - 抖音AI封面第 6 页（`ai-cover/06-preview.jpg`）：1 个视频框 `x 8.63 / y 30.69 / w 18.87 / h 70`，接 `ai-cover-39-demo.mp4`（来源 `对应20240539.mov`）；
   - 抖音AI封面第 7 页（`ai-cover/07-preview.jpg`）：3 个视频框 `x 29.7 / 52.14 / 74.64`、`y 33.12`、`w 17.8 / 17.8 / 17.74`、`h 70`，分别接 `ai-cover-step-1/2/3.mp4`（来源 `20240540-1/2/3.mov`）；
-  - 个人AI转型实践第 6 页（`assets/demo/ai-reading-01-preview.jpg`）：1 个视频框 `x 41.02 / y 33.01 / w 52.45 / h 54.35`，接 `ai-practice-demo.mp4`（源 `IMG_6245.mov`，带 AAC 音轨）与 `ai-practice-demo-poster.jpg`；
-  - 抖音 5 条视频为 592×1280 H.264 + 592×1280 JPEG poster；个人实践视频为 1920×1080 H.264 + 1280×720 poster，均带 AAC 音轨（个人实践）、点击播放、同页只播一个；**默认不静音**，原生控件可调音量。
+  - 个人AI转型实践第 6 页（`assets/demo/ai-reading-01-preview.jpg`）：1 个视频框 `x 41.02 / y 33.01 / w 52.45 / h 54.35`，接 `ai-practice-demo.mp4`（源 `IMG_6245.mov`，带 AAC 音轨）与 `ai-practice-demo-poster.jpg`；**默认静音**，播放时显示声音提示；
+  - 抖音 5 条视频为 592×1280 H.264 + 592×1280 JPEG poster（无音轨）；个人实践视频为 1920×1080 H.264 + 1280×720 poster（带 AAC 音轨），点击播放、同页只播一个；除个人实践默认静音外，其余默认不静音，原生控件可调音量。
 - **产出方式**：本地放置编辑器 `.qa/media/compose.html`（工作区辅助文件，不提交）拖入背景图与视频 → 拖动/缩放框 → 自动截 poster → 导出 slide 对象粘进 `script.js`；视频先转 720p 竖屏 H.264（≤12 MB/条）。
 - **改写视频源**：`overlays[].src` 支持相对路径或绝对 URL，换托管只改前缀，其他代码不动。
 - **PNG 图层**：`overlays[].kind: "image"` 渲染为绝对定位 `<img>`，用同一套百分比体系；支持 `z`（层级）、`opacity`、`fit`（默认 `contain`，保留透明边距）、`radius`；图层 `pointer-events: none`，不会挡住压在它下面的视频按钮。
@@ -193,7 +194,7 @@
 - 复合页只实现了 `play: "click"`；`enter`（进入即播）/ `hover`（悬停预览）两档数据字段已留，渲染逻辑未实现。
 - 复合页现挂在「个人AI转型实践」项目第 6 页：背景为 `assets/demo/ai-reading-01.png`（亲声伴读 · iOS 端 AI 开发实践），视频框 `x 41.02 / y 33.01 / w 52.45 / h 54.35`、`radius 1`；视频已替换为 `IMG_6245.mov` 转码的 `assets/video/ai-practice-demo.mp4`（1920×1080 H.264 + AAC 160k），点击播放有声音。
 - 新增视频页：抖音其他项目第 3 页（1 框）、抖音AI封面第 6 页（1 框）、第 7 页（3 框）；映射分别为 `37.mov`、`对应20240539.mov`、`20240540-1/2/3.mov`。
-- 视频播放器默认不静音（`muted:false`，`volume:1`），原生 controls 可调音量；个人实践视频已带 AAC 音轨，点击可正常出声；其余 5 条抖音屏幕录制源视频仍只有视频轨，播放无声，需要带声音的录屏。
+- 视频播放器默认不静音（`muted:false`，`volume:1`），原生 controls 可调音量；例外是个人实践视频默认静音，播放时在音量图标上方提示检查电脑音量后取消静音。个人实践视频已带 AAC 音轨，取消静音后可正常出声；其余 5 条抖音屏幕录制源视频仍只有视频轨，播放无声。
 - 该真实页面已归入「个人AI转型实践」项目（字节跳动经历下第 4 个项目的第 6 页），不再占用「抖音创作服务平台」的页码。
 - 抖音创作服务平台原 13–16 页已合并为第 13 页滚动叠加（4 层），项目总页数 32；原 17–35 页页码整体前移 3。
 - `assets/demo/ppt-demo.png` + `assets/slide-thumbs/demo-01.jpg` 保留为 `.qa/media/compose.html` 的默认测试素材，不在站点里引用。
@@ -245,7 +246,7 @@
 - 查看器支持普通图片页与 `type: "composite"` 复合页共存；复合页由 16:9 背景、百分比定位的视频框和 PNG 图层组成，旧图片数据无需迁移。
 - 视频默认点击后才注入 `src`，同页只播放一个；离页时暂停、移除源并销毁元素。视频页与其他页一致使用 640ms 上下翻页，转场使用预合成 preview 图、隐藏 canvas，结束后恢复 overlay。
 - PNG 图层与视频共用百分比坐标体系，支持层级、透明度、适配方式和等比圆角；分层 PPT 应先用现有编辑器或坐标转换工具校验后再入库。
-- 「个人AI转型实践」第 6 页继续使用复合页实现；视频已替换为带 AAC 音轨的 `ai-practice-demo.mp4`，点击播放可正常出声。
+- 「个人AI转型实践」第 6 页继续使用复合页实现；视频已替换为带 AAC 音轨的 `ai-practice-demo.mp4`，默认静音播放，点击后提示可取消静音，取消后正常出声。
 - 抖音其他项目第 3 页、抖音AI封面第 6/7 页为视频复合页；视频/ poster 与框坐标以 §3.8 为准；播放器不强制静音，但源视频目前无音轨。
 - 抖音其他项目第 3 页视频顶部对齐媒体框，仅上方圆角、底部直角并被裁切；其他视频页仍四角圆角。
 - 抖音创作服务平台第 13 页为滚动叠加页（原 13–16 页），层切换 560ms，页码不变；规则以 §3.10 为准。

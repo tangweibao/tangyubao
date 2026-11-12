@@ -758,3 +758,41 @@ body[data-screen="viewer"] .viewer-nav { animation: viewer-nav-in .62s var(--eas
 /* Keep the thumbnail boot placeholder to a single cover image; the later
    .artwork-frame shorthand above would otherwise reset repeat/size. */
 .artwork-frame { background-position: center; background-size: cover; background-repeat: no-repeat; }
+
+/* Muted-by-default video hint. It sits above the native control bar's sound
+   icon so the visitor knows to unmute after starting playback. */
+.media-sound-hint {
+  position: absolute;
+  z-index: 5;
+  right: 7%;
+  bottom: 46px;
+  max-width: min(260px, 62%);
+  padding: 7px 10px;
+  border: 1px solid rgba(255, 255, 255, .16);
+  border-radius: 7px;
+  background: rgba(10, 12, 16, .92);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, .35);
+  color: #f4f6f8;
+  font: 500 clamp(9px, 1.05vw, 12px)/1.5 "Helvetica Neue", Helvetica, Arial, sans-serif;
+  letter-spacing: .01em;
+  pointer-events: none;
+  opacity: 0;
+  transform: translateY(4px);
+  transition: opacity .25s ease, transform .25s ease;
+}
+.media-sound-hint.is-visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+.media-sound-hint::after {
+  content: "";
+  position: absolute;
+  right: 86px;
+  bottom: -5px;
+  width: 9px;
+  height: 9px;
+  background: inherit;
+  border-right: 1px solid rgba(255, 255, 255, .16);
+  border-bottom: 1px solid rgba(255, 255, 255, .16);
+  transform: rotate(45deg);
+}
