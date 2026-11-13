@@ -12,9 +12,9 @@ const jdSlides = Array.from({ length: 37 }, (_, index) => {
   };
 });
 
-const kingsoftPages = [30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40, 41, 43];
+const kingsoftPages = [30, 31, 32, 33, 34, 35, 37, 38, 40, 41];
 const kingsoftSlides = kingsoftPages.map((number, index) => ({
-  src: `${assetRoot}/C端${number}.${number === 39 ? "jpg" : "png"}`,
+  src: `${assetRoot}/C端${number}.png`,
   thumb: `assets/slide-thumbs/kingsoft-${pad(index + 1)}.jpg`,
   alt: `金山词霸案例第 ${index + 1} 页`
 }));
