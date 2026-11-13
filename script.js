@@ -797,7 +797,7 @@ function renderTimeline() {
           <small>${experience.meta}</small>
         </span>
       </header>
-      <div class="group-projects">
+      <div class="group-projects" style="--group-width:calc(${experience.projects.map(() => "var(--stream-card-width)").concat(experience.projects.slice(1).map(() => "var(--group-gap)")).join(" + ")})">
         ${experience.projects.map((project, projectIndex) => `
           <button class="stream-project${project.disabled ? " is-pending" : ""}" type="button" data-home-project="${project.id}" data-home-experience="${experience.id}" aria-label="查看 ${project.name}">
             <img src="${project.cover}" alt="" loading="lazy">
