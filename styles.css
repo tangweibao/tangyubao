@@ -560,9 +560,9 @@ body[data-screen="viewer"] .viewer-nav { animation: viewer-nav-in .62s var(--eas
 .group-company { color: #f0f0ed; font-family: Impact, Haettenschweiler, "Arial Narrow Bold", sans-serif; font-size: clamp(12px, 1.05vw, 16px); font-weight: 500; letter-spacing: -.01em; text-transform: uppercase; }
 .group-copy strong { color: #b4b8be; font-size: clamp(10px, .85vw, 12px); font-weight: 450; letter-spacing: .03em; line-height: 1.35; }
 .group-copy small { color: #8a929e; font-size: clamp(10px, .85vw, 12px); letter-spacing: .06em; line-height: 1.35; }
-.group-projects { --stream-card-width: clamp(210px, 18vw, 324px); grid-row: 1; display: flex; align-items: stretch; gap: var(--group-gap); width: var(--group-width); min-height: 0; }
+.group-projects { --stream-card-width: clamp(210px, 18vw, 324px); grid-row: 1; display: flex; align-items: stretch; gap: var(--group-gap); width: var(--group-width); min-height: 0; transition: width .65s cubic-bezier(.66,0,.2,1); }
 
-.stream-project { position: relative; z-index: 1; flex: 1 1 0; min-width: 0; width: auto; height: 100%; max-height: 100%; align-self: stretch; overflow: hidden; padding: 0; border: 0; background: #1a1b1d; color: #fff; text-align: left; cursor: pointer; animation: stream-card-in .9s both var(--ease); transition: flex-grow .65s cubic-bezier(.66,0,.2,1), transform .7s var(--ease), filter .55s, opacity .45s, box-shadow .5s; }
+.stream-project { position: relative; z-index: 1; flex: 0 1 var(--stream-card-width); min-width: 0; width: auto; height: 100%; max-height: 100%; align-self: stretch; overflow: hidden; padding: 0; border: 0; background: #1a1b1d; color: #fff; text-align: left; cursor: pointer; animation: stream-card-in .9s both var(--ease); transition: flex-basis .65s cubic-bezier(.66,0,.2,1), transform .7s var(--ease), filter .55s, opacity .45s, box-shadow .5s; }
 .stream-project:nth-child(2) { animation-delay: .08s; }
 .stream-project:nth-child(3) { animation-delay: .16s; }
 @keyframes stream-card-in { from { opacity: 0; translate: 0 36px; } to { opacity: 1; translate: 0; } }
@@ -574,11 +574,24 @@ body[data-screen="viewer"] .viewer-nav { animation: viewer-nav-in .62s var(--eas
   opacity: .32;
   filter: brightness(.55);
 }
-.group-projects:has(.stream-project:nth-child(2)):has(.stream-project:hover) .stream-project,
-.group-projects:has(.stream-project:nth-child(2)):has(.stream-project:focus-visible) .stream-project { flex-grow: .62; }
-.group-projects:has(.stream-project:nth-child(2)):has(.stream-project:hover) .stream-project:hover,
-.group-projects:has(.stream-project:nth-child(2)):has(.stream-project:focus-visible) .stream-project:focus-visible { flex-grow: 2.1; }
-.group-projects:has(.stream-project.is-returning) .stream-project { flex-grow: 1 !important; }
+/* Expanded card follows the cover's 16:9 ratio exactly, so the whole cover is
+   visible instead of being cropped by the resting portrait card. The width is
+   measured from the current card height in script.js. */
+.group-projects:has(.stream-project:hover) .stream-project,
+.group-projects:has(.stream-project:focus-visible) .stream-project { flex: 1 1 var(--stream-card-width); }
+.group-projects:has(.stream-project:hover) .stream-project:hover,
+.group-projects:has(.stream-project:focus-visible) .stream-project:focus-visible {
+  flex: 0 0 var(--expanded-card-width, var(--stream-card-width));
+  width: var(--expanded-card-width, var(--stream-card-width));
+}
+/* Single-project experiences (JD / Kingsoft) have no sibling to absorb the
+   accordion, so the group itself grows to the expanded card width. */
+.group-projects:not(:has(.stream-project:nth-child(2))):has(.stream-project:hover),
+.group-projects:not(:has(.stream-project:nth-child(2))):has(.stream-project:focus-visible) {
+  width: var(--expanded-card-width, var(--group-width));
+}
+.group-projects:has(.stream-project.is-returning) { width: var(--group-width) !important; }
+.group-projects:has(.stream-project.is-returning) .stream-project { flex: 0 1 var(--stream-card-width) !important; width: auto !important; }
 .stream-project:hover, .stream-project:focus-visible { z-index: 4; transform: translateY(-6px); box-shadow: 0 26px 60px rgba(0, 0, 0, .5); }
 .stream-project.is-returning { transform: translateY(0) !important; }
 /* keep the cover at its resting look while the clone shrinks, so the clone's

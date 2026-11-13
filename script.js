@@ -429,6 +429,20 @@ const experiences = {
   }
 };
 
+// The current project cover is also the first viewer page. Keeping the cover
+// and page 1 identical makes the card-to-viewer handoff seamless and avoids
+// showing a second, unrelated opening slide.
+Object.values(experiences).forEach((experience) => {
+  experience.projects.forEach((project) => {
+    const first = project.slides?.[0];
+    if (!first || first.type) return;
+    first.src = project.cover;
+    first.variants = slideVariants(project.cover);
+    first.alt = `${project.name}封面`;
+    delete first.links;
+  });
+});
+
 const state = {
   screen: "home",
   experienceId: null,
@@ -1889,7 +1903,21 @@ const reduceMotionQuery = window.matchMedia("(prefers-reduced-motion: reduce)");
 
 const clampStream = (value) => Math.min(Math.max(value, 0), stream.max);
 
+const STREAM_COVER_RATIO = 16 / 9;
+
+function measureStreamAccordion() {
+  elements.timeline.querySelectorAll(".group-projects").forEach((group) => {
+    const card = group.querySelector(".stream-project");
+    if (!card) return;
+    const height = card.getBoundingClientRect().height;
+    if (height > 0) {
+      group.style.setProperty("--expanded-card-width", `${(height * STREAM_COVER_RATIO).toFixed(2)}px`);
+    }
+  });
+}
+
 function measureStream() {
+  measureStreamAccordion();
   const shell = elements.streamShell;
   if (!shell.offsetWidth) {
     stream.dirty = true;
