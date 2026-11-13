@@ -647,10 +647,11 @@ function updateRailMask() {
   rail.classList.toggle("is-no-scroll", max <= 2);
   rail.classList.toggle("is-at-top", max > 2 && position <= 2);
   rail.classList.toggle("is-at-bottom", max > 2 && position >= max - 2);
-  // Fewer than 10 pages: if they all fit, center them vertically in the rail
-  // instead of leaving the empty space at the bottom (wide screens only).
+  // Fewer than 15 pages: if they all fit, center the group in the rail
+  // instead of leaving the empty space at the bottom (wide screens) or right
+  // (portrait strip). This also keeps the first thumb clear of the top fade.
   const count = rail.querySelectorAll(".thumbnail").length;
-  rail.classList.toggle("is-short-list", count > 0 && count < 10 && max <= 2);
+  rail.classList.toggle("is-short-list", count > 0 && count < 15 && max <= 2);
 }
 
 elements.thumbnailRail.addEventListener("scroll", updateRailMask, { passive: true });

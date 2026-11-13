@@ -779,7 +779,7 @@ body[data-screen="viewer"] .viewer-nav { animation: viewer-nav-in .62s var(--eas
   .thumbnail-dock { grid-column: 1; grid-row: 2; flex-direction: row; align-items: center; gap: 8px; padding: 8px 10px calc(8px + env(safe-area-inset-bottom)); border-left: 0; border-top: 1px solid rgba(255, 255, 255, .08); }
   .thumbnail-label { display: none; }
   .thumbnail-rail { flex-direction: row; overflow-x: auto; overflow-y: hidden; gap: 8px; padding: 2px; --rail-fade: 14px; --rail-mask: linear-gradient(to right, transparent 0, #000 var(--rail-fade), #000 calc(100% - var(--rail-fade)), transparent 100%); }
-  .thumbnail-rail.is-short-list { justify-content: flex-start; }
+  .thumbnail-rail.is-short-list { justify-content: center; }
   .thumbnail-rail.is-at-top { --rail-mask: linear-gradient(to right, #000 0, #000 calc(100% - var(--rail-fade)), transparent 100%); }
   .thumbnail-rail.is-at-bottom { --rail-mask: linear-gradient(to right, transparent 0, #000 var(--rail-fade), #000 100%); }
   .thumbnail-rail.is-no-scroll { --rail-mask: none; }
